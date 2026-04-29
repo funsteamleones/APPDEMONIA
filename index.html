@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club Sarmiento - Portal</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+
+    <!-- AUTHENTICATION LAYER -->
+    <div id="auth-layer" class="auth-layer active">
+        <div class="auth-container">
+            <!-- Login Form -->
+            <div id="login-form" class="auth-form active">
+                <div class="auth-header">
+                    <div class="club-logo-large">
+                        <i class="ph-fill ph-shield-check"></i>
+                    </div>
+                    <h2>Bienvenido al Club</h2>
+                    <p>Ingresa tus datos para acceder al portal.</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="login-dni">DNI del Socio</label>
+                    <div class="input-wrapper">
+                        <i class="ph ph-identification-card"></i>
+                        <input type="text" id="login-dni" placeholder="Ej: 35123456" autocomplete="off">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="login-password">Contraseña</label>
+                    <div class="input-wrapper">
+                        <i class="ph ph-lock-key"></i>
+                        <input type="password" id="login-password" placeholder="Tu contraseña">
+                    </div>
+                </div>
+                
+                <p id="login-error" class="error-msg"></p>
+                
+                <button class="btn-primary w-100" onclick="login()">Ingresar al Portal</button>
+                
+                <div class="auth-footer">
+                    <p>¿No estás registrado? <a href="#" onclick="toggleAuthForm('register')">Crear cuenta</a></p>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="auth-form">
+                <div class="auth-header">
+                    <div class="club-logo-large">
+                        <i class="ph-fill ph-user-plus"></i>
+                    </div>
+                    <h2>Nuevo Socio</h2>
+                    <p>Comleta tus datos para registrarte.</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg-name">Nombre Completo</label>
+                    <div class="input-wrapper">
+                        <i class="ph ph-user"></i>
+                        <input type="text" id="reg-name" placeholder="Ej: Juan Pérez">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reg-dni">DNI</label>
+                    <div class="input-wrapper">
+                        <i class="ph ph-identification-card"></i>
+                        <input type="text" id="reg-dni" placeholder="Sin puntos ni espacios">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg-password">Contraseña</label>
+                    <div class="input-wrapper">
+                        <i class="ph ph-lock-key"></i>
+                        <input type="password" id="reg-password" placeholder="Crea una contraseña">
+                    </div>
+                </div>
+
+                <p id="reg-error" class="error-msg"></p>
+                <p id="reg-success" class="success-msg"></p>
+                
+                <button class="btn-primary w-100" onclick="register()">Registrarme</button>
+                
+                <div class="auth-footer">
+                    <p>¿Ya tienes cuenta? <a href="#" onclick="toggleAuthForm('login')">Inicia sesión</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APPLICATION LAYER -->
+    <div id="app-layer" class="app-container" style="display: none;">
+        
+        <!-- Sidebar Navigation (Desktop) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="ph-fill ph-shield-check"></i>
+                <span>CLUB SARMIENTO</span>
+            </div>
+            
+            <nav class="side-nav">
+                <button class="nav-item active" data-target="inicio" onclick="navigate('inicio')">
+                    <i class="ph ph-house"></i>
+                    <span>Inicio</span>
+                </button>
+                <button class="nav-item" data-target="novedades" onclick="navigate('novedades')">
+                    <i class="ph ph-newspaper"></i>
+                    <span>Novedades</span>
+                </button>
+                <button class="nav-item" data-target="horarios" onclick="navigate('horarios')">
+                    <i class="ph ph-calendar-blank"></i>
+                    <span>Horarios</span>
+                </button>
+                <button class="nav-item" data-target="cuotas" onclick="navigate('cuotas')">
+                    <i class="ph ph-wallet"></i>
+                    <span>Cuotas</span>
+                </button>
+                <div class="nav-divider"></div>
+                <button class="nav-item admin-only" data-target="admin" onclick="navigate('admin')" style="display: none;">
+                    <i class="ph ph-users-three"></i>
+                    <span>Padrones (Admin)</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="ph ph-sign-out"></i>
+                    <span>Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="main-wrapper">
+            <!-- Header -->
+            <header class="app-header">
+                <div class="header-content">
+                    <div class="page-title-mobile">Portal del Socio</div>
+                    
+                    <div class="user-info">
+                        <div class="greeting">
+                            <span class="greeting-text" id="user-greeting">Hola, Socio</span>
+                            <span class="socio-number" id="user-socio-id">Socio #---</span>
+                        </div>
+                        <img src="https://ui-avatars.com/api/?name=Socio&background=16a34a&color=fff" alt="Perfil" class="avatar" id="user-avatar">
+                        <button class="icon-btn" onclick="toggleNotifications(event)">
+                            <i class="ph ph-bell"></i>
+                            <span class="badge" id="notification-badge">0</span>
+                        </button>
+                        
+                        <!-- Notifications Dropdown -->
+                        <div class="notifications-dropdown" id="notifications-panel">
+                            <div class="notif-header">
+                                <h3>Notificaciones</h3>
+                                <button class="btn-clear-notif" onclick="clearNotifications()">Marcar leídas</button>
+                            </div>
+                            <div class="notif-list" id="notif-list">
+                                <!-- Llenado por JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="app-main" id="main-content">
+                <!-- VISTAS DE LA APLICACIÓN -->
+                
+                <!-- Vista: Inicio / Dashboard -->
+                <section id="view-inicio" class="view active">
+                    <div class="dashboard-grid">
+                        <div class="dashboard-left">
+                            <div class="carnet-card">
+                                <div class="carnet-header">
+                                    <div class="club-logo">
+                                        <i class="ph-fill ph-shield-check"></i>
+                                        <span>CLUB SARMIENTO</span>
+                                    </div>
+                                    <div class="status-badge active" id="carnet-status">ACTIVO</div>
+                                </div>
+                                <div class="carnet-body">
+                                    <div class="member-name" id="carnet-name">Nombre Apellido</div>
+                                    <div class="member-category">Socio Pleno <span id="carnet-dni"></span></div>
+                                </div>
+                                <div class="carnet-footer">
+                                    <div class="qr-placeholder">
+                                        <i class="ph ph-qr-code"></i>
+                                    </div>
+                                    <div class="footer-info">
+                                        <span>Válido hasta</span>
+                                        <strong>31/12/2026</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-right">
+                            <div class="section-title">
+                                <h2>Próximas Actividades</h2>
+                                <a href="#" class="see-all" onclick="navigate('horarios')">Ver todo</a>
+                            </div>
+                            
+                            <div class="activity-cards" id="dashboard-activities-list">
+                                <!-- Llenado por JS dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Vista: Novedades -->
+                <section id="view-novedades" class="view">
+                    <div class="page-header">
+                        <h1>Novedades</h1>
+                        <p>Enterate de todo lo que pasa en el club</p>
+                    </div>
+                    
+                    <div class="news-feed desktop-grid">
+                        <article class="news-card">
+                            <div class="news-image" style="background-color: #1e293b; background-image: url('https://images.unsplash.com/photo-1518605368461-1ee125225f27?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'); background-size: cover; background-position: center;">
+                                <span class="news-category tag-sports">Deportes</span>
+                            </div>
+                            <div class="news-content">
+                                <span class="news-date">24 de Abril, 2026</span>
+                                <h3>¡Campeones del Torneo Regional!</h3>
+                                <p>Nuestro equipo de Primera de Básquet se coronó campeón tras vencer 85-78 en la final.</p>
+                                <button class="btn-text" onclick="readMoreNews()">Leer más <i class="ph ph-arrow-right"></i></button>
+                            </div>
+                        </article>
+
+                        <article class="news-card">
+                            <div class="news-image" style="background-color: #1e293b; background-image: url('https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'); background-size: cover; background-position: center;">
+                                <span class="news-category tag-club">Institucional</span>
+                            </div>
+                            <div class="news-content">
+                                <span class="news-date">20 de Abril, 2026</span>
+                                <h3>Renovación del Quincho Principal</h3>
+                                <p>Finalizamos las obras de mejora en el sector de asadores. Ya está disponible para reservas.</p>
+                                <button class="btn-text" onclick="readMoreNews()">Leer más <i class="ph ph-arrow-right"></i></button>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <!-- Vista: Horarios -->
+                <section id="view-horarios" class="view">
+                    <div class="page-header">
+                        <h1>Horarios</h1>
+                        <p>Grilla de actividades semanales</p>
+                    </div>
+
+                    <div class="filters">
+                        <button class="filter-btn active" onclick="filterSchedule('Todos')">Todos</button>
+                        <button class="filter-btn" onclick="filterSchedule('Fútbol')">Fútbol</button>
+                        <button class="filter-btn" onclick="filterSchedule('Básquet')">Básquet</button>
+                        <button class="filter-btn" onclick="filterSchedule('Natación')">Natación</button>
+                    </div>
+
+                    <div class="schedule-grid">
+                        <div class="schedule-day">
+                            <h3>Lunes</h3>
+                            <div class="schedule-item" data-category="Fútbol">
+                                <div class="time">16:00</div>
+                                <div class="details">
+                                    <h4>Escuelita de Fútbol</h4>
+                                    <span>Cancha Auxiliar • Prof. Martín</span>
+                                </div>
+                                <button class="btn-enroll" onclick="enrollActivity('Escuelita de Fútbol', 'Lunes 16:00 hs', 'green', 'ph-soccer-ball')">Inscribirme</button>
+                            </div>
+                            <div class="schedule-item" data-category="Natación">
+                                <div class="time">18:00</div>
+                                <div class="details">
+                                    <h4>Natación Adultos</h4>
+                                    <span>Pileta Climatizada • Prof. Laura</span>
+                                </div>
+                                <button class="btn-enroll" onclick="enrollActivity('Natación Adultos', 'Lunes 18:00 hs', 'blue', 'ph-swimming-pool')">Inscribirme</button>
+                            </div>
+                            <div class="schedule-item" data-category="Básquet">
+                                <div class="time">20:00</div>
+                                <div class="details">
+                                    <h4>Básquet Primera</h4>
+                                    <span>Estadio Principal • Prof. Diego</span>
+                                </div>
+                                <button class="btn-enroll" onclick="enrollActivity('Básquet Primera', 'Lunes 20:00 hs', 'orange', 'ph-basketball')">Inscribirme</button>
+                            </div>
+                        </div>
+
+                        <div class="schedule-day">
+                            <h3>Martes</h3>
+                            <div class="schedule-item" data-category="Básquet">
+                                <div class="time">17:00</div>
+                                <div class="details">
+                                    <h4>Básquet Formativas</h4>
+                                    <span>Estadio Principal • Prof. Diego</span>
+                                </div>
+                                <button class="btn-enroll" onclick="enrollActivity('Básquet Formativas', 'Martes 17:00 hs', 'orange', 'ph-basketball')">Inscribirme</button>
+                            </div>
+                            <div class="schedule-item" data-category="Todos">
+                                <div class="time">19:00</div>
+                                <div class="details">
+                                    <h4>Zumba</h4>
+                                    <span>Salón de Usos Múltiples • Prof. Ana</span>
+                                </div>
+                                <button class="btn-enroll" onclick="enrollActivity('Zumba', 'Martes 19:00 hs', 'purple', 'ph-activity')">Inscribirme</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Vista: Cuotas -->
+                <section id="view-cuotas" class="view">
+                    <div class="page-header">
+                        <h1>Estado de Cuenta</h1>
+                        <p>Consulta tus cuotas y pagos</p>
+                    </div>
+
+                    <div class="finance-grid">
+                        <div class="balance-card">
+                            <p>Saldo pendiente</p>
+                            <h2>$0.00</h2>
+                            <div class="balance-status all-good">
+                                <i class="ph-fill ph-check-circle"></i>
+                                <span>Estás al día</span>
+                            </div>
+                        </div>
+
+                        <div class="payments-wrapper">
+                            <div class="section-title">
+                                <h2>Últimos Pagos</h2>
+                            </div>
+                            <div class="payments-list">
+                                <div class="payment-item">
+                                    <div class="payment-icon">
+                                        <i class="ph ph-receipt"></i>
+                                    </div>
+                                    <div class="payment-info">
+                                        <h4>Cuota Abril 2026</h4>
+                                        <span>Pagado el 05/04/2026 vía MercadoPago</span>
+                                    </div>
+                                    <div class="payment-amount">
+                                        $15,000
+                                    </div>
+                                </div>
+                                <div class="payment-item">
+                                    <div class="payment-icon">
+                                        <i class="ph ph-receipt"></i>
+                                    </div>
+                                    <div class="payment-info">
+                                        <h4>Cuota Marzo 2026</h4>
+                                        <span>Pagado el 03/03/2026 vía Transferencia</span>
+                                    </div>
+                                    <div class="payment-amount">
+                                        $15,000
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Vista: Administración (Base de Datos) -->
+                <section id="view-admin" class="view">
+                    <div class="page-header">
+                        <h1>Administración de Socios</h1>
+                        <p>Base de datos local (localStorage)</p>
+                    </div>
+
+                    <div class="admin-panel">
+                        <div class="admin-toolbar">
+                            <h3>Socios Registrados</h3>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn-secondary" onclick="refreshAdminTable()"><i class="ph ph-arrows-clockwise"></i> Actualizar</button>
+                                <button class="btn-secondary" style="color: #ef4444; border-color: #ef4444;" onclick="resetDB()"><i class="ph ph-warning-circle"></i> Resetear BD</button>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID Socio</th>
+                                        <th>Nombre Completo</th>
+                                        <th>DNI</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-users-list">
+                                    <!-- Los usuarios se llenan por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="app.js?v=3"></script>
+</body>
+</html>
