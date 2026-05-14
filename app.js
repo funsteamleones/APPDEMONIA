@@ -161,12 +161,12 @@ function checkAuthAndRender() {
         renderNotifications();
         
         // Handle admin features
-        const adminBtn = document.querySelector('.admin-only');
+        const adminBtns = document.querySelectorAll('.admin-only');
         if (currentUser.role === 'admin') {
-            adminBtn.style.display = 'flex';
+            adminBtns.forEach(btn => btn.style.display = 'flex');
             refreshAdminTable();
         } else {
-            adminBtn.style.display = 'none';
+            adminBtns.forEach(btn => btn.style.display = 'none');
         }
 
         // Navigate to default
@@ -276,6 +276,16 @@ function navigate(viewId) {
             item.classList.remove('active');
             const icon = item.querySelector('i');
             if (icon) icon.className = icon.className.replace('ph-fill ', 'ph ');
+        }
+    });
+
+    // 4. Update mobile bottom nav UI
+    const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+    mobileNavItems.forEach(item => {
+        if (item.dataset.target === viewId) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
         }
     });
 
@@ -461,3 +471,403 @@ function enrollActivity(name, time, color, icon) {
     // Refresh dashboard
     populateUserData(users[userIndex]);
 }
+
+// =========================================
+// DATA LAYER (Firebase / localStorage fallback)
+// =========================================
+
+function dbGet(key) {
+    return JSON.parse(localStorage.getItem(key)) || [];
+}
+
+function dbSet(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
+// =========================================
+// EVENTS LOGIC
+// =========================================
+
+function renderEventos() {
+    const events = dbGet('club_events');
+    const container = document.getElementById('events-list');
+    if (!container) return;
+    const currentUser = getCurrentUser();
+    const isAdmin = currentUser && currentUser.role === 'admin';
+
+    if (events.length === 0) {
+        container.innerHTML = '<p class="empty-state"><i class="ph ph-calendar-x"></i><br>No hay eventos publicados aún.</p>';
+        return;
+    }
+
+    container.innerHTML = events.sort((a,b) => new Date(a.date) - new Date(b.date)).map(ev => {
+        const dateStr = ev.date ? new Date(ev.date + 'T00:00:00').toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long' }) : '';
+        const imgStyle = ev.image ? `background-image:url('${ev.image}'); background-size:cover; background-position:center;` : '';
+        const deleteBtn = isAdmin ? `<button class="event-delete-btn" onclick="deleteEvent('${ev.id}')"><i class="ph ph-trash"></i></button>` : '';
+        return `
+        <div class="event-card">
+            ${deleteBtn}
+            <div class="event-card-image" style="${imgStyle}">${ev.image ? '' : '🎉'}</div>
+            <div class="event-card-body">
+                <div class="event-date-badge"><i class="ph ph-calendar"></i> ${dateStr}</div>
+                <h3>${ev.title}</h3>
+                <p>${ev.description}</p>
+                <div class="event-meta">
+                    ${ev.time ? `<span><i class="ph ph-clock"></i> ${ev.time} hs</span>` : ''}
+                    ${ev.location ? `<span><i class="ph ph-map-pin"></i> ${ev.location}</span>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function publishEvent() {
+    const title = document.getElementById('event-title').value.trim();
+    const date = document.getElementById('event-date').value;
+    const time = document.getElementById('event-time').value;
+    const location = document.getElementById('event-location').value.trim();
+    const description = document.getElementById('event-description').value.trim();
+    const image = document.getElementById('event-image').value.trim();
+    const msg = document.getElementById('event-msg');
+
+    if (!title || !date || !description) {
+        msg.style.color = '#ef4444';
+        msg.innerText = 'Completá al menos título, fecha y descripción.';
+        return;
+    }
+
+    const events = dbGet('club_events');
+    events.push({ id: Date.now().toString(), title, date, time, location, description, image, createdAt: new Date().toISOString() });
+    dbSet('club_events', events);
+
+    msg.style.color = '#16a34a';
+    msg.innerText = '✅ Evento publicado con éxito.';
+    document.getElementById('event-title').value = '';
+    document.getElementById('event-date').value = '';
+    document.getElementById('event-time').value = '';
+    document.getElementById('event-location').value = '';
+    document.getElementById('event-description').value = '';
+    document.getElementById('event-image').value = '';
+    setTimeout(() => msg.innerText = '', 3000);
+    renderEventos();
+}
+
+function deleteEvent(id) {
+    if (!confirm('¿Eliminar este evento?')) return;
+    dbSet('club_events', dbGet('club_events').filter(e => e.id !== id));
+    renderEventos();
+}
+
+// =========================================
+// ARTICLES LOGIC
+// =========================================
+
+const CAT_COLORS = {
+    'Deportes': 'cat-deportes',
+    'Institucional': 'cat-institucional',
+    'Cultura': 'cat-cultura',
+    'Salud': 'cat-salud',
+    'General': 'cat-general'
+};
+
+const CAT_BG = {
+    'Deportes': 'rgba(22,163,74,0.85)',
+    'Institucional': 'rgba(14,165,233,0.85)',
+    'Cultura': 'rgba(168,85,247,0.85)',
+    'Salud': 'rgba(249,115,22,0.85)',
+    'General': 'rgba(100,116,139,0.85)'
+};
+
+function renderArticulos() {
+    const articles = dbGet('club_articles');
+    const container = document.getElementById('articles-list');
+    if (!container) return;
+    const currentUser = getCurrentUser();
+    const isAdmin = currentUser && currentUser.role === 'admin';
+
+    if (articles.length === 0) {
+        container.innerHTML = '<p class="empty-state"><i class="ph ph-newspaper"></i><br>No hay artículos publicados aún.</p>';
+        return;
+    }
+
+    container.innerHTML = articles.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).map(art => {
+        const catClass = CAT_COLORS[art.category] || 'cat-general';
+        const imgStyle = art.image ? `background-image:url('${art.image}');` : 'background:#e2e8f0;';
+        const dateStr = new Date(art.createdAt).toLocaleDateString('es-AR', { day:'numeric', month:'long', year:'numeric' });
+        const deleteBtn = isAdmin ? `<button class="article-delete-btn" onclick="event.stopPropagation(); deleteArticle('${art.id}')"><i class="ph ph-trash"></i></button>` : '';
+        return `
+        <div class="article-card" onclick="openArticleModal('${art.id}')">
+            <div class="article-card-image" style="${imgStyle}">
+                <span class="article-cat-tag ${catClass}">${art.category}</span>
+            </div>
+            <div class="article-card-body">
+                <h3>${art.title}</h3>
+                <p>${art.body}</p>
+                <div class="article-footer">
+                    <span>${dateStr}</span>
+                    ${deleteBtn}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function publishArticle() {
+    const title = document.getElementById('article-title').value.trim();
+    const category = document.getElementById('article-category').value;
+    const image = document.getElementById('article-image').value.trim();
+    const body = document.getElementById('article-body').value.trim();
+    const msg = document.getElementById('article-msg');
+
+    if (!title || !body) {
+        msg.style.color = '#ef4444';
+        msg.innerText = 'Completá título y contenido.';
+        return;
+    }
+
+    const articles = dbGet('club_articles');
+    const user = getCurrentUser();
+    articles.push({ id: Date.now().toString(), title, category, image, body, author: user.name, authorId: user.id, createdAt: new Date().toISOString() });
+    dbSet('club_articles', articles);
+
+    msg.style.color = '#16a34a';
+    msg.innerText = '✅ Artículo publicado con éxito.';
+    document.getElementById('article-title').value = '';
+    document.getElementById('article-image').value = '';
+    document.getElementById('article-body').value = '';
+    setTimeout(() => msg.innerText = '', 3000);
+    renderArticulos();
+}
+
+function deleteArticle(id) {
+    if (!confirm('¿Eliminar este artículo?')) return;
+    dbSet('club_articles', dbGet('club_articles').filter(a => a.id !== id));
+    renderArticulos();
+}
+
+function openArticleModal(id) {
+    const articles = dbGet('club_articles');
+    const art = articles.find(a => a.id === id);
+    if (!art) return;
+    const catBg = CAT_BG[art.category] || CAT_BG['General'];
+    const dateStr = new Date(art.createdAt).toLocaleDateString('es-AR', { day:'numeric', month:'long', year:'numeric' });
+    const imgEl = document.getElementById('modal-img');
+    imgEl.src = art.image || '';
+    imgEl.className = art.image ? 'modal-hero-img visible' : 'modal-hero-img';
+    document.getElementById('modal-cat').innerText = art.category;
+    document.getElementById('modal-cat').style.background = catBg;
+    document.getElementById('modal-title').innerText = art.title;
+    document.getElementById('modal-meta').innerText = `Por ${art.author} · ${dateStr}`;
+    document.getElementById('modal-text').innerText = art.body;
+    document.getElementById('article-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeArticleModal(event) {
+    if (event && event.target !== document.getElementById('article-modal')) return;
+    document.getElementById('article-modal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// =========================================
+// CHATBOT FAQ
+// =========================================
+
+const FAQ_KB = [
+    { keywords:['hola','buenas','buenos','saludos','hey'], answer:'👋 ¡Hola! Soy el asistente del Club Sarmiento. Puedo ayudarte con horarios, cuotas, actividades y más. ¿En qué te puedo ayudar?' },
+    { keywords:['cuota','pagar','pago','deuda','debe','factura','mensualidad'], answer:'💰 <b>Cuotas:</b> Consultá tu estado de cuenta en la pestaña "Cuotas". Las cuotas vencen el último día de cada mes. Se puede pagar via MercadoPago o transferencia bancaria.' },
+    { keywords:['horario','actividad','clase','deporte'], answer:'📅 <b>Horarios:</b> La grilla completa de actividades está en la pestaña "Horarios". Podés filtrar por deporte e inscribirte desde ahí.' },
+    { keywords:['inscribir','inscribirme','sumar','unirse','anotarse'], answer:'✅ <b>Inscripción:</b> En la pestaña "Horarios" encontrás todas las actividades. Presioná "Inscribirme" en la que te interese.' },
+    { keywords:['evento','eventos','fiesta','torneo','campeonato'], answer:'🎉 <b>Eventos:</b> Revisá la pestaña "Eventos" para ver todos los próximos eventos del club.' },
+    { keywords:['articulo','noticia','noticias','novedad'], answer:'📰 <b>Artículos:</b> En la pestaña "Artículos" encontrás todas las noticias e información institucional publicadas por la administración.' },
+    { keywords:['carnet','credencial','tarjeta','qr'], answer:'🪪 <b>Carnet digital:</b> Tu carnet está en la pantalla de Inicio. Muestra tu nombre, DNI, número de socio y estado.' },
+    { keywords:['contraseña','password','olvidé','olvide','recuperar'], answer:'🔑 Si olvidaste tu contraseña, contactate con la administración del club en secretaría.' },
+    { keywords:['registrar','registro','cuenta','hacerse socio','nuevo socio'], answer:'👤 <b>Registro:</b> Hacé clic en "Crear cuenta" en la pantalla de login. Solo necesitás nombre, DNI y contraseña.' },
+    { keywords:['admin','administrador','secretaria','administracion'], answer:'⚙️ La secretaría atiende de Lunes a Viernes de 9 a 17 hs.' },
+    { keywords:['abre','cierra','cuando','horario club','atencion'], answer:'🕐 El club abre de Lunes a Domingo de 7:00 a 23:00 hs.' },
+    { keywords:['pileta','natacion','nadar','piscina'], answer:'🏊 Contamos con pileta climatizada disponible todo el año. Las clases son para adultos y niños.' },
+    { keywords:['precio','costo','valor','cuanto cuesta','cuanto vale'], answer:'💵 La cuota mensual es de $15.000. Para descuentos familiares consultá en secretaría.' },
+    { keywords:['futbol','fútbol','soccer'], answer:'⚽ Tenemos Escuelita de Fútbol los Lunes a las 16:00 en la Cancha Auxiliar con el Prof. Martín.' },
+    { keywords:['basquet','básquet','basket'], answer:'🏀 Básquet Primera los Lunes a las 20:00 y Formativas los Martes a las 17:00 en el Estadio Principal.' },
+    { keywords:['zumba','baile','fitness'], answer:'💃 Zumba los Martes a las 19:00 en el Salón de Usos Múltiples con la Prof. Ana.' },
+    { keywords:['gracias','ok','genial','perfecto','buenisimo'], answer:'😊 ¡De nada! Si necesitás algo más, acá estoy. ¡Que tengas un excelente día!' }
+];
+
+let chatOpen = false;
+let chatGreeted = false;
+
+function toggleChat() {
+    chatOpen = !chatOpen;
+    const panel = document.getElementById('chatbot-panel');
+    panel.classList.toggle('active', chatOpen);
+    document.getElementById('chat-unread').style.display = 'none';
+    if (chatOpen && !chatGreeted) {
+        chatGreeted = true;
+        setTimeout(() => addBotMessage('👋 ¡Hola! Soy el asistente del Club Sarmiento. ¿En qué te puedo ayudar hoy?'), 400);
+    }
+}
+
+function addBotMessage(text) {
+    const msgs = document.getElementById('chatbot-messages');
+    // Show typing indicator
+    const typing = document.createElement('div');
+    typing.className = 'chat-msg bot chat-typing';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    msgs.appendChild(typing);
+    msgs.scrollTop = msgs.scrollHeight;
+    setTimeout(() => {
+        msgs.removeChild(typing);
+        const msg = document.createElement('div');
+        msg.className = 'chat-msg bot';
+        msg.innerHTML = text;
+        msgs.appendChild(msg);
+        msgs.scrollTop = msgs.scrollHeight;
+    }, 900);
+}
+
+function addUserMessage(text) {
+    const msgs = document.getElementById('chatbot-messages');
+    const msg = document.createElement('div');
+    msg.className = 'chat-msg user';
+    msg.innerText = text;
+    msgs.appendChild(msg);
+    msgs.scrollTop = msgs.scrollHeight;
+}
+
+function processMessage(text) {
+    const lower = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    for (const entry of FAQ_KB) {
+        if (entry.keywords.some(kw => lower.includes(kw.normalize('NFD').replace(/[\u0300-\u036f]/g,'')))) {
+            return entry.answer;
+        }
+    }
+    return '🤔 No tengo información sobre eso. Para consultas específicas, contactate con la secretaría del club (Lun-Vie, 9 a 17 hs).';
+}
+
+function sendChatMessage() {
+    const input = document.getElementById('chatbot-input');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    addUserMessage(text);
+    addBotMessage(processMessage(text));
+}
+
+function sendSuggestion(text) {
+    if (!chatOpen) toggleChat();
+    addUserMessage(text);
+    addBotMessage(processMessage(text));
+}
+
+// =========================================
+// OVERRIDE: checkAuthAndRender - show admin panels
+// =========================================
+
+const _origCheckAuth = checkAuthAndRender;
+// Patch navigate to render new views
+const _origNavigate = navigate;
+window.navigate = function(viewId) {
+    _origNavigate(viewId);
+    if (viewId === 'eventos') renderEventos();
+    if (viewId === 'articulos') renderArticulos();
+    // Show/hide admin publish panels
+    const user = getCurrentUser();
+    const isAdmin = user && user.role === 'admin';
+    const adminPanels = document.querySelectorAll('.admin-publish-panel');
+    adminPanels.forEach(p => p.style.display = isAdmin ? 'block' : 'none');
+};
+
+// =========================================
+// PROFILE LOGIC
+// =========================================
+
+function loadProfile() {
+    const user = getCurrentUser();
+    if (!user) return;
+    const profileKey = `club_profile_${user.id}`;
+    const profile = JSON.parse(localStorage.getItem(profileKey)) || {};
+
+    // Readonly fields from account
+    const nameEl = document.getElementById('profile-name');
+    const dniEl = document.getElementById('profile-dni');
+    if (nameEl) nameEl.value = user.name || '';
+    if (dniEl) dniEl.value = user.dni || '';
+
+    // Avatar card
+    const dispName = document.getElementById('profile-display-name');
+    const dispDni = document.getElementById('profile-display-dni');
+    if (dispName) dispName.innerText = user.name || '-';
+    if (dispDni) dispDni.innerText = `DNI: ${user.dni || '-'}`;
+
+    // Editable fields
+    const fields = ['birth', 'blood', 'phone', 'email', 'address', 'emergency-name', 'emergency-phone', 'photo'];
+    fields.forEach(f => {
+        const el = document.getElementById(`profile-${f}`);
+        if (el && profile[f]) el.value = profile[f];
+    });
+
+    // Avatar preview
+    const avatarBig = document.getElementById('profile-avatar-big');
+    if (avatarBig) {
+        avatarBig.src = profile.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=16a34a&color=fff&size=200`;
+    }
+
+    updateCompletion(profile);
+}
+
+function updateCompletion(profile) {
+    const tracked = ['birth', 'blood', 'phone', 'email', 'address', 'emergency-name', 'emergency-phone', 'photo'];
+    const filled = tracked.filter(f => profile[f] && profile[f].trim() !== '').length;
+    const pct = Math.round((filled / tracked.length) * 100);
+    const fill = document.getElementById('completion-fill');
+    const text = document.getElementById('completion-text');
+    if (fill) fill.style.width = `${pct}%`;
+    if (text) text.innerText = `${pct}% completado`;
+}
+
+function saveProfile() {
+    const user = getCurrentUser();
+    if (!user) return;
+    const profileKey = `club_profile_${user.id}`;
+    const profile = {
+        birth: document.getElementById('profile-birth')?.value || '',
+        blood: document.getElementById('profile-blood')?.value || '',
+        phone: document.getElementById('profile-phone')?.value || '',
+        email: document.getElementById('profile-email')?.value || '',
+        address: document.getElementById('profile-address')?.value || '',
+        'emergency-name': document.getElementById('profile-emergency-name')?.value || '',
+        'emergency-phone': document.getElementById('profile-emergency-phone')?.value || '',
+        photo: document.getElementById('profile-photo')?.value || ''
+    };
+    localStorage.setItem(profileKey, JSON.stringify(profile));
+
+    // Update avatar in header if photo changed
+    if (profile.photo) {
+        const headerAvatar = document.getElementById('user-avatar');
+        if (headerAvatar) headerAvatar.src = profile.photo;
+        const avatarBig = document.getElementById('profile-avatar-big');
+        if (avatarBig) avatarBig.src = profile.photo;
+    }
+
+    updateCompletion(profile);
+
+    const msg = document.getElementById('profile-msg');
+    if (msg) {
+        msg.style.color = '#16a34a';
+        msg.innerText = '✅ Datos guardados correctamente.';
+        setTimeout(() => msg.innerText = '', 3000);
+    }
+}
+
+function previewAvatar() {
+    const url = document.getElementById('profile-photo')?.value;
+    const avatarBig = document.getElementById('profile-avatar-big');
+    if (avatarBig && url) avatarBig.src = url;
+}
+
+// Patch navigate to also handle 'perfil'
+const _prevNavigate = window.navigate;
+window.navigate = function(viewId) {
+    _prevNavigate(viewId);
+    if (viewId === 'perfil') loadProfile();
+};

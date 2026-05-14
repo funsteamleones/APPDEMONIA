@@ -1,0 +1,18 @@
+{
+    "name": "Club Sarmiento - Portal del Socio",
+    "short_name": "Club Sarmiento",
+    "description": "Portal oficial de socios del Club Sarmiento",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#f1f5f9",
+    "theme_color": "#16a34a",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "https://files.catbox.moe/9h1xff.jpg",
+            "sizes": "192x192",
+            "type": "image/jpeg",
+            "purpose": "any maskable"
+        }
+    ]
+}
