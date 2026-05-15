@@ -11,8 +11,10 @@
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="styles.css?v=5">
+    <link rel="stylesheet" href="styles.css?v=6">
     <script src="firebase-config.js"></script>
+    <!-- Google reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
 
@@ -86,6 +88,10 @@
                         <i class="ph ph-lock-key"></i>
                         <input type="password" id="reg-password" placeholder="Crea una contraseña">
                     </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:12px;">
+                    <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" data-theme="light"></div>
                 </div>
 
                 <p id="reg-error" class="error-msg"></p>
@@ -258,7 +264,12 @@
                     <div class="profile-grid">
                         <!-- Avatar Card -->
                         <div class="profile-avatar-card">
-                            <img id="profile-avatar-big" src="https://ui-avatars.com/api/?name=Socio&background=16a34a&color=fff&size=200" class="profile-avatar-large">
+                            <div class="profile-avatar-wrapper">
+                                <img id="profile-avatar-big" src="https://ui-avatars.com/api/?name=Socio&background=16a34a&color=fff&size=200" class="profile-avatar-large">
+                                <div id="profile-avatar-icon-display" class="profile-avatar-icon-display" style="display:none;">
+                                    <i id="profile-avatar-icon-i"></i>
+                                </div>
+                            </div>
                             <h3 id="profile-display-name">-</h3>
                             <p id="profile-display-dni" style="color:var(--text-muted); font-size:0.9rem;">DNI: -</p>
                             <div class="profile-completion">
@@ -266,8 +277,11 @@
                                 <span id="completion-text">0% completado</span>
                             </div>
                             <div class="form-group" style="margin-top:16px; text-align:left;">
-                                <label style="font-size:0.85rem;font-weight:600;">URL de Foto de Perfil</label>
-                                <input type="url" id="profile-photo" class="profile-input" placeholder="https://..." onchange="previewAvatar()">
+                                <label style="font-size:0.85rem;font-weight:600;">Elegí tu avatar</label>
+                                <div class="avatar-gallery" id="avatar-gallery">
+                                    <!-- Filled by JS -->
+                                </div>
+                                <input type="hidden" id="profile-photo">
                             </div>
                         </div>
                         <!-- Data Form -->
@@ -288,19 +302,11 @@
                                     <label class="profile-label">Fecha de Nacimiento</label>
                                     <input type="date" id="profile-birth" class="profile-input">
                                 </div>
-                                <div class="form-group">
-                                    <label class="profile-label">Grupo Sanguíneo</label>
-                                    <select id="profile-blood" class="profile-input select-input">
-                                        <option value="">Seleccionar...</option>
-                                        <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
-                                        <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
-                                    </select>
-                                </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="profile-label">Teléfono</label>
-                                    <input type="tel" id="profile-phone" class="profile-input" placeholder="Ej: 2616-123456">
+                                    <input type="tel" id="profile-phone" class="profile-input" placeholder="Ej: 2616-123456" oninput="this.value=this.value.replace(/[^0-9\-\+\s]/g,'')">
                                 </div>
                                 <div class="form-group">
                                     <label class="profile-label">Email</label>
@@ -319,7 +325,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label class="profile-label">Teléfono</label>
-                                    <input type="tel" id="profile-emergency-phone" class="profile-input" placeholder="Ej: 2616-654321">
+                                    <input type="tel" id="profile-emergency-phone" class="profile-input" placeholder="Ej: 2616-654321" oninput="this.value=this.value.replace(/[^0-9\-\+\s]/g,'')">
                                 </div>
                             </div>
                             <div style="margin-top:24px;">
@@ -346,7 +352,7 @@
                                 <span class="news-date">24 de Abril, 2026</span>
                                 <h3>¡Campeones del Torneo Regional!</h3>
                                 <p>Nuestro equipo de Primera de Básquet se coronó campeón tras vencer 85-78 en la final.</p>
-                                <button class="btn-text" onclick="readMoreNews()">Leer más <i class="ph ph-arrow-right"></i></button>
+                                <button class="btn-text" onclick="readMoreNews('campeones')">Leer más <i class="ph ph-arrow-right"></i></button>
                             </div>
                         </article>
 
@@ -358,7 +364,7 @@
                                 <span class="news-date">20 de Abril, 2026</span>
                                 <h3>Renovación del Quincho Principal</h3>
                                 <p>Finalizamos las obras de mejora en el sector de asadores. Ya está disponible para reservas.</p>
-                                <button class="btn-text" onclick="readMoreNews()">Leer más <i class="ph ph-arrow-right"></i></button>
+                                <button class="btn-text" onclick="readMoreNews('quincho')">Leer más <i class="ph ph-arrow-right"></i></button>
                             </div>
                         </article>
                     </div>
@@ -681,6 +687,6 @@
         </button>
     </div>
 
-    <script src="app.js?v=6"></script>
+    <script src="app.js?v=7"></script>
 </body>
 </html>

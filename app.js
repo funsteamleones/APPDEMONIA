@@ -58,6 +58,13 @@ function register() {
         return;
     }
 
+    // Validate reCAPTCHA
+    const recaptchaResponse = typeof grecaptcha !== 'undefined' ? grecaptcha.getResponse() : '';
+    if (!recaptchaResponse) {
+        errorEl.innerText = 'Por favor completá el captcha.';
+        return;
+    }
+
     const users = getUsers();
     
     // Verificar si ya existe
@@ -84,6 +91,7 @@ function register() {
     document.getElementById('reg-name').value = '';
     document.getElementById('reg-dni').value = '';
     document.getElementById('reg-password').value = '';
+    if (typeof grecaptcha !== 'undefined') grecaptcha.reset();
 
     // Cambiar al form de login tras un breve delay
     setTimeout(() => {
@@ -418,8 +426,42 @@ document.addEventListener('DOMContentLoaded', () => {
 // INTERACTIVE FEATURES
 // =========================================
 
-function readMoreNews() {
-    alert("Pronto podrás leer la noticia completa en detalle. ¡Estamos trabajando en esta funcionalidad!");
+// News data for the hardcoded novedades cards
+const NEWS_DATA = {
+    campeones: {
+        title: '¡Campeones del Torneo Regional!',
+        category: 'Deportes',
+        date: '24 de Abril, 2026',
+        image: 'https://images.unsplash.com/photo-1518605368461-1ee125225f27?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+        body: 'Nuestro equipo de Primera de Básquet se coronó campeón del Torneo Regional tras vencer 85-78 en una emocionante final disputada en el Estadio Principal del club.\n\nEl partido fue vibrante de principio a fin. El equipo dirigido por el Prof. Diego salió con todo desde el primer cuarto, estableciendo una ventaja temprana de 12 puntos que supo administrar a lo largo del encuentro.\n\nLos puntos destacados del partido:\n• Máximo anotador: Facundo López con 28 puntos\n• Mejor asistidor: Martín Gómez con 9 asistencias\n• Rebotes: Santiago Ruiz dominó la pintura con 14 rebotes\n\nEste es el tercer título regional consecutivo para nuestro equipo, consolidando al Club Sarmiento como una potencia del básquet en la región.\n\n¡Felicitaciones a todo el plantel, cuerpo técnico y a los hinchas que alentaron durante todo el torneo! 🏆🏀'
+    },
+    quincho: {
+        title: 'Renovación del Quincho Principal',
+        category: 'Institucional',
+        date: '20 de Abril, 2026',
+        image: 'https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+        body: 'Finalizamos las obras de mejora en el sector de asadores del Quincho Principal. Ya está disponible para reservas de socios.\n\nLas mejoras realizadas incluyen:\n• Instalación de 4 nuevas parrillas de acero inoxidable\n• Renovación completa del techo con aislación térmica\n• Nuevo sistema de iluminación LED\n• Mesas y bancos de madera tratada para 80 personas\n• Baños reformados con accesibilidad\n• Sector de juegos infantiles contiguo\n\nPara reservar el quincho, los socios activos pueden acercarse a secretaría o contactar por WhatsApp al número del club. Las reservas se realizan con un mínimo de 7 días de anticipación.\n\nTarifas:\n• Socios activos: sin costo (solo limpieza)\n• Evento con más de 50 personas: consultar en secretaría\n\n¡Los esperamos para disfrutar de este renovado espacio! 🔥🥩'
+    }
+};
+
+function readMoreNews(newsId) {
+    const news = NEWS_DATA[newsId];
+    if (!news) return;
+
+    const catBg = CAT_BG[news.category] || CAT_BG['General'];
+
+    const imgEl = document.getElementById('modal-img');
+    imgEl.src = news.image || '';
+    imgEl.className = news.image ? 'modal-hero-img visible' : 'modal-hero-img';
+
+    document.getElementById('modal-cat').innerText = news.category;
+    document.getElementById('modal-cat').style.background = catBg;
+    document.getElementById('modal-title').innerText = news.title;
+    document.getElementById('modal-meta').innerText = `Club Sarmiento · ${news.date}`;
+    document.getElementById('modal-text').innerText = news.body;
+
+    document.getElementById('article-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
 function filterSchedule(category) {
@@ -695,6 +737,7 @@ const FAQ_KB = [
 
 let chatOpen = false;
 let chatGreeted = false;
+let chatCooldown = false;
 
 function toggleChat() {
     chatOpen = !chatOpen;
@@ -748,15 +791,29 @@ function sendChatMessage() {
     const input = document.getElementById('chatbot-input');
     const text = input.value.trim();
     if (!text) return;
+    if (chatCooldown) return;
     input.value = '';
+    chatCooldown = true;
+    // Disable input briefly
+    input.disabled = true;
     addUserMessage(text);
     addBotMessage(processMessage(text));
+    setTimeout(() => {
+        chatCooldown = false;
+        input.disabled = false;
+        input.focus();
+    }, 1000);
 }
 
 function sendSuggestion(text) {
+    if (chatCooldown) return;
     if (!chatOpen) toggleChat();
+    chatCooldown = true;
     addUserMessage(text);
     addBotMessage(processMessage(text));
+    setTimeout(() => {
+        chatCooldown = false;
+    }, 1000);
 }
 
 // =========================================
@@ -800,23 +857,29 @@ function loadProfile() {
     if (dispDni) dispDni.innerText = `DNI: ${user.dni || '-'}`;
 
     // Editable fields
-    const fields = ['birth', 'blood', 'phone', 'email', 'address', 'emergency-name', 'emergency-phone', 'photo'];
+    const fields = ['birth', 'phone', 'email', 'address', 'emergency-name', 'emergency-phone', 'photo'];
     fields.forEach(f => {
         const el = document.getElementById(`profile-${f}`);
         if (el && profile[f]) el.value = profile[f];
     });
 
     // Avatar preview
-    const avatarBig = document.getElementById('profile-avatar-big');
-    if (avatarBig) {
-        avatarBig.src = profile.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=16a34a&color=fff&size=200`;
+    if (profile.photo && profile.photo.startsWith('avatar-')) {
+        const idx = parseInt(profile.photo.replace('avatar-', ''));
+        showAvatarIcon(idx);
+    } else {
+        const defaultUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=16a34a&color=fff&size=200`;
+        showAvatarImg(profile.photo || defaultUrl);
     }
+
+    // Build avatar gallery
+    renderAvatarGallery(profile.photo);
 
     updateCompletion(profile);
 }
 
 function updateCompletion(profile) {
-    const tracked = ['birth', 'blood', 'phone', 'email', 'address', 'emergency-name', 'emergency-phone', 'photo'];
+    const tracked = ['birth', 'phone', 'email', 'address', 'emergency-name', 'emergency-phone', 'photo'];
     const filled = tracked.filter(f => profile[f] && profile[f].trim() !== '').length;
     const pct = Math.round((filled / tracked.length) * 100);
     const fill = document.getElementById('completion-fill');
@@ -828,10 +891,52 @@ function updateCompletion(profile) {
 function saveProfile() {
     const user = getCurrentUser();
     if (!user) return;
+    const msg = document.getElementById('profile-msg');
+
+    // Validate age (3-110 years)
+    const birthVal = document.getElementById('profile-birth')?.value || '';
+    if (birthVal) {
+        const birthDate = new Date(birthVal + 'T00:00:00');
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+        if (age < 3 || age > 110) {
+            msg.style.color = '#ef4444';
+            msg.innerText = '⚠️ La edad debe ser entre 3 y 110 años.';
+            setTimeout(() => msg.innerText = '', 4000);
+            return;
+        }
+    }
+
+    // Validate email format
+    const emailVal = document.getElementById('profile-email')?.value || '';
+    if (emailVal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+        msg.style.color = '#ef4444';
+        msg.innerText = '⚠️ El formato de email no es válido.';
+        setTimeout(() => msg.innerText = '', 4000);
+        return;
+    }
+
+    // Validate phone (no letters)
+    const phoneVal = document.getElementById('profile-phone')?.value || '';
+    if (phoneVal && /[a-zA-Z]/.test(phoneVal)) {
+        msg.style.color = '#ef4444';
+        msg.innerText = '⚠️ El teléfono no puede contener letras.';
+        setTimeout(() => msg.innerText = '', 4000);
+        return;
+    }
+    const emergPhoneVal = document.getElementById('profile-emergency-phone')?.value || '';
+    if (emergPhoneVal && /[a-zA-Z]/.test(emergPhoneVal)) {
+        msg.style.color = '#ef4444';
+        msg.innerText = '⚠️ El teléfono de emergencia no puede contener letras.';
+        setTimeout(() => msg.innerText = '', 4000);
+        return;
+    }
+
     const profileKey = `club_profile_${user.id}`;
     const profile = {
-        birth: document.getElementById('profile-birth')?.value || '',
-        blood: document.getElementById('profile-blood')?.value || '',
+        birth: birthVal,
         phone: document.getElementById('profile-phone')?.value || '',
         email: document.getElementById('profile-email')?.value || '',
         address: document.getElementById('profile-address')?.value || '',
@@ -842,16 +947,22 @@ function saveProfile() {
     localStorage.setItem(profileKey, JSON.stringify(profile));
 
     // Update avatar in header if photo changed
-    if (profile.photo) {
-        const headerAvatar = document.getElementById('user-avatar');
-        if (headerAvatar) headerAvatar.src = profile.photo;
-        const avatarBig = document.getElementById('profile-avatar-big');
-        if (avatarBig) avatarBig.src = profile.photo;
+    if (profile.photo && profile.photo.startsWith('avatar-')) {
+        const idx = parseInt(profile.photo.replace('avatar-', ''));
+        const opt = AVATAR_OPTIONS[idx];
+        if (opt) {
+            // Update profile big avatar with icon overlay
+            showAvatarIcon(idx);
+            // Update header with colored SVG
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" rx="100" fill="${opt.bg}"/><text x="100" y="130" text-anchor="middle" fill="white" font-size="100" font-family="sans-serif">${opt.emoji}</text></svg>`;
+            const dataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
+            const headerAvatar = document.getElementById('user-avatar');
+            if (headerAvatar) headerAvatar.src = dataUrl;
+        }
     }
 
     updateCompletion(profile);
 
-    const msg = document.getElementById('profile-msg');
     if (msg) {
         msg.style.color = '#16a34a';
         msg.innerText = '✅ Datos guardados correctamente.';
@@ -870,4 +981,101 @@ const _prevNavigate = window.navigate;
 window.navigate = function(viewId) {
     _prevNavigate(viewId);
     if (viewId === 'perfil') loadProfile();
+};
+
+// =========================================
+// AVATAR GALLERY
+// =========================================
+
+const AVATAR_OPTIONS = [
+    { icon: 'ph-fill ph-user-circle',       bg: '#16a34a', label: 'Persona',   emoji: '\u{1F464}' },
+    { icon: 'ph-fill ph-smiley',            bg: '#0ea5e9', label: 'Sonrisa',   emoji: '\u{1F60A}' },
+    { icon: 'ph-fill ph-cat',               bg: '#8b5cf6', label: 'Gato',      emoji: '\u{1F431}' },
+    { icon: 'ph-fill ph-dog',               bg: '#f97316', label: 'Perro',     emoji: '\u{1F436}' },
+    { icon: 'ph-fill ph-soccer-ball',       bg: '#15803d', label: 'F\u00fatbol',   emoji: '\u26BD' },
+    { icon: 'ph-fill ph-basketball',        bg: '#ea580c', label: 'B\u00e1squet',  emoji: '\u{1F3C0}' },
+    { icon: 'ph-fill ph-swimming-pool',     bg: '#0284c7', label: 'Nataci\u00f3n', emoji: '\u{1F3CA}' },
+    { icon: 'ph-fill ph-trophy',            bg: '#ca8a04', label: 'Trofeo',    emoji: '\u{1F3C6}' },
+    { icon: 'ph-fill ph-star',              bg: '#eab308', label: 'Estrella',  emoji: '\u2B50' },
+    { icon: 'ph-fill ph-heart',             bg: '#dc2626', label: 'Coraz\u00f3n',  emoji: '\u2764' },
+    { icon: 'ph-fill ph-flower-lotus',      bg: '#d946ef', label: 'Flor',      emoji: '\u{1F338}' },
+    { icon: 'ph-fill ph-tree',              bg: '#059669', label: '\u00c1rbol',    emoji: '\u{1F333}' },
+    { icon: 'ph-fill ph-lightning',         bg: '#7c3aed', label: 'Rayo',      emoji: '\u26A1' },
+    { icon: 'ph-fill ph-fire',              bg: '#ef4444', label: 'Fuego',     emoji: '\u{1F525}' },
+    { icon: 'ph-fill ph-rocket',            bg: '#6366f1', label: 'Cohete',    emoji: '\u{1F680}' }
+];
+
+function renderAvatarGallery(selectedUrl) {
+    const gallery = document.getElementById('avatar-gallery');
+    if (!gallery) return;
+    gallery.innerHTML = '';
+
+    AVATAR_OPTIONS.forEach((opt, idx) => {
+        const avatarId = `avatar-${idx}`;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'avatar-option' + (selectedUrl === avatarId ? ' selected' : '');
+        btn.style.background = opt.bg;
+        btn.innerHTML = `<i class="${opt.icon}"></i>`;
+        btn.title = opt.label;
+        btn.onclick = () => selectAvatar(idx);
+        gallery.appendChild(btn);
+    });
+}
+
+function selectAvatar(idx) {
+    const avatarId = `avatar-${idx}`;
+    document.getElementById('profile-photo').value = avatarId;
+
+    // Show the icon in the profile avatar
+    showAvatarIcon(idx);
+
+    // Update selection visually
+    document.querySelectorAll('.avatar-option').forEach((btn, i) => {
+        btn.classList.toggle('selected', i === idx);
+    });
+}
+
+// Helper: show icon avatar in profile page
+function showAvatarIcon(idx) {
+    const opt = AVATAR_OPTIONS[idx];
+    if (!opt) return;
+    const imgEl = document.getElementById('profile-avatar-big');
+    const iconDisplay = document.getElementById('profile-avatar-icon-display');
+    const iconI = document.getElementById('profile-avatar-icon-i');
+    if (imgEl) imgEl.style.display = 'none';
+    if (iconDisplay) {
+        iconDisplay.style.display = 'flex';
+        iconDisplay.style.background = opt.bg;
+        iconI.className = opt.icon;
+    }
+}
+
+// Helper: show img avatar (initials fallback)
+function showAvatarImg(src) {
+    const imgEl = document.getElementById('profile-avatar-big');
+    const iconDisplay = document.getElementById('profile-avatar-icon-display');
+    if (imgEl) {
+        imgEl.style.display = 'block';
+        imgEl.src = src;
+    }
+    if (iconDisplay) iconDisplay.style.display = 'none';
+}
+
+// Override populateUserData to also render avatar icon in header/carnet
+const _origPopulateUserData = populateUserData;
+window.populateUserData = function(user) {
+    _origPopulateUserData(user);
+    const profileKey = `club_profile_${user.id}`;
+    const profile = JSON.parse(localStorage.getItem(profileKey)) || {};
+    if (profile.photo && profile.photo.startsWith('avatar-')) {
+        const idx = parseInt(profile.photo.replace('avatar-', ''));
+        const opt = AVATAR_OPTIONS[idx];
+        if (opt) {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" rx="100" fill="${opt.bg}"/><text x="100" y="130" text-anchor="middle" fill="white" font-size="100" font-family="sans-serif">${opt.emoji}</text></svg>`;
+            const dataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
+            const headerAvatar = document.getElementById('user-avatar');
+            if (headerAvatar) headerAvatar.src = dataUrl;
+        }
+    }
 };
