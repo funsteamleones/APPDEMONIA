@@ -263,6 +263,44 @@ function populateUserData(user) {
             });
         }
     }
+
+    updateEnrollButtons(user);
+}
+
+function updateEnrollButtons(user) {
+    const buttons = document.querySelectorAll('.btn-enroll');
+    const userActivities = user.activities || [];
+    const enrolledNames = userActivities.map(act => act.name);
+
+    buttons.forEach(btn => {
+        const detailsDiv = btn.previousElementSibling;
+        if (detailsDiv && detailsDiv.querySelector('h4')) {
+            const actName = detailsDiv.querySelector('h4').innerText.trim();
+            if (enrolledNames.includes(actName)) {
+                btn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Inscripto';
+                btn.disabled = true;
+                btn.style.backgroundColor = '#94a3b8';
+                btn.style.borderColor = '#94a3b8';
+                btn.style.color = '#ffffff';
+                btn.style.cursor = 'not-allowed';
+                btn.style.display = 'flex';
+                btn.style.alignItems = 'center';
+                btn.style.justifyContent = 'center';
+                btn.style.gap = '6px';
+            } else {
+                btn.innerText = 'Inscribirme';
+                btn.disabled = false;
+                btn.style.backgroundColor = '';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+                btn.style.cursor = 'pointer';
+                btn.style.display = '';
+                btn.style.alignItems = '';
+                btn.style.justifyContent = '';
+                btn.style.gap = '';
+            }
+        }
+    });
 }
 
 // =========================================
