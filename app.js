@@ -58,6 +58,16 @@ function register() {
         return;
     }
 
+    if (!/^\d+$/.test(dni)) {
+        errorEl.innerText = 'El DNI debe contener solo números.';
+        return;
+    }
+
+    if (dni.length < 7 || dni.length > 9) {
+        errorEl.innerText = 'El DNI debe tener entre 7 y 9 números.';
+        return;
+    }
+
     // Validate reCAPTCHA
     const recaptchaResponse = typeof grecaptcha !== 'undefined' ? grecaptcha.getResponse() : '';
     if (!recaptchaResponse) {

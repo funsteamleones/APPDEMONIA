@@ -35,7 +35,7 @@
                     <label for="login-dni">DNI del Socio</label>
                     <div class="input-wrapper">
                         <i class="ph ph-identification-card"></i>
-                        <input type="text" id="login-dni" placeholder="Ej: 35123456" autocomplete="off">
+                        <input type="text" id="login-dni" placeholder="Ej: 35123456" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                     </div>
                 </div>
                 
@@ -78,7 +78,7 @@
                     <label for="reg-dni">DNI</label>
                     <div class="input-wrapper">
                         <i class="ph ph-identification-card"></i>
-                        <input type="text" id="reg-dni" placeholder="Sin puntos ni espacios">
+                        <input type="text" id="reg-dni" placeholder="Sin puntos ni espacios" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                     </div>
                 </div>
                 
