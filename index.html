@@ -70,7 +70,7 @@
                     <label for="reg-name">Nombre Completo</label>
                     <div class="input-wrapper">
                         <i class="ph ph-user"></i>
-                        <input type="text" id="reg-name" placeholder="Ej: Juan Pérez">
+                        <input type="text" id="reg-name" placeholder="Ej: Juan Pérez" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g,'')">
                     </div>
                 </div>
 

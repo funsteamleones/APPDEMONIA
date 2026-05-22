@@ -58,6 +58,13 @@ function register() {
         return;
     }
 
+    const badWords = ['puto', 'mierda', 'concha', 'verga', 'pija', 'boludo', 'pelotudo', 'idiota', 'estupido'];
+    const lowerName = name.toLowerCase();
+    if (badWords.some(word => lowerName.includes(word))) {
+        errorEl.innerText = 'El nombre contiene palabras no permitidas.';
+        return;
+    }
+
     if (!/^\d+$/.test(dni)) {
         errorEl.innerText = 'El DNI debe contener solo números.';
         return;
@@ -767,7 +774,7 @@ const FAQ_KB = [
     { keywords:['hola','buenas','buenos','saludos','hey'], answer:'👋 ¡Hola! Soy el asistente del Club Sarmiento. Puedo ayudarte con horarios, cuotas, actividades y más. ¿En qué te puedo ayudar?' },
     { keywords:['cuota','pagar','pago','deuda','debe','factura','mensualidad'], answer:'💰 <b>Cuotas:</b> Consultá tu estado de cuenta en la pestaña "Cuotas". Las cuotas vencen el último día de cada mes. Se puede pagar via MercadoPago o transferencia bancaria.' },
     { keywords:['horario','actividad','clase','deporte'], answer:'📅 <b>Horarios:</b> La grilla completa de actividades está en la pestaña "Horarios". Podés filtrar por deporte e inscribirte desde ahí.' },
-    { keywords:['inscribir','inscribirme','sumar','unirse','anotarse'], answer:'✅ <b>Inscripción:</b> En la pestaña "Horarios" encontrás todas las actividades. Presioná "Inscribirme" en la que te interese.' },
+    { keywords:['inscribir','inscribirme','inscribo','sumar','unirse','anotarse'], answer:'✅ <b>Inscripción:</b> En la pestaña "Horarios" encontrás todas las actividades. Presioná "Inscribirme" en la que te interese.' },
     { keywords:['evento','eventos','fiesta','torneo','campeonato'], answer:'🎉 <b>Eventos:</b> Revisá la pestaña "Eventos" para ver todos los próximos eventos del club.' },
     { keywords:['articulo','noticia','noticias','novedad'], answer:'📰 <b>Artículos:</b> En la pestaña "Artículos" encontrás todas las noticias e información institucional publicadas por la administración.' },
     { keywords:['carnet','credencial','tarjeta','qr'], answer:'🪪 <b>Carnet digital:</b> Tu carnet está en la pantalla de Inicio. Muestra tu nombre, DNI, número de socio y estado.' },
