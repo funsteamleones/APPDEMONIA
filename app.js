@@ -1029,9 +1029,6 @@ function saveProfile() {
         const idx = parseInt(profile.photo.replace('avatar-', ''));
         const opt = AVATAR_OPTIONS[idx];
         if (opt) {
-            // Update profile big avatar
-            showAvatarImg(opt.url);
-            // Update header
             const headerAvatar = document.getElementById('user-avatar');
             if (headerAvatar) headerAvatar.src = opt.url;
         }
@@ -1064,12 +1061,21 @@ window.navigate = function(viewId) {
 // =========================================
 
 const AVATAR_OPTIONS = [
-    { url: 'assets/diablito_bombero_1780086086062.png', label: 'Bombero' },
-    { url: 'assets/diablito_secretario_1780086098301.png', label: 'Secretario' },
-    { url: 'assets/diablito_deportista_1780086132250.png', label: 'Deportista' },
-    { url: 'assets/diablito_cocinero_1780086146152.png', label: 'Cocinero' },
-    { url: 'assets/diablito_musico_1780086161762.png', label: 'Músico' },
-    { url: 'assets/diablito_rey_1780086174142.png', label: 'Rey' }
+    { emoji: '😈🏠', bg: '#16a34a', label: 'Socio' },
+    { emoji: '😈🚒', bg: '#dc2626', label: 'Bombero' },
+    { emoji: '😈💼', bg: '#0ea5e9', label: 'Oficinista' },
+    { emoji: '😈⚽', bg: '#15803d', label: 'Deportista' },
+    { emoji: '😈🍳', bg: '#f97316', label: 'Cocinero' },
+    { emoji: '😈🎸', bg: '#7c3aed', label: 'Músico' },
+    { emoji: '😈👑', bg: '#ca8a04', label: 'Rey' },
+    { emoji: '😈🎨', bg: '#d946ef', label: 'Artista' },
+    { emoji: '😈🔬', bg: '#0891b2', label: 'Científico' },
+    { emoji: '😈📚', bg: '#65a30d', label: 'Estudiante' },
+    { emoji: '😈🏋️', bg: '#ea580c', label: 'Atleta' },
+    { emoji: '😈🎮', bg: '#6366f1', label: 'Gamer' },
+    { emoji: '😈🌿', bg: '#059669', label: 'Naturaleza' },
+    { emoji: '😈🎭', bg: '#e11d48', label: 'Actor' },
+    { emoji: '😈🚀', bg: '#4f46e5', label: 'Astronauta' }
 ];
 
 function renderAvatarGallery(selectedUrl) {
@@ -1082,10 +1088,8 @@ function renderAvatarGallery(selectedUrl) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'avatar-option' + (selectedUrl === avatarId ? ' selected' : '');
-        btn.style.background = 'transparent';
-        btn.style.padding = '0';
-        btn.style.border = selectedUrl === avatarId ? '3px solid var(--primary)' : '3px solid transparent';
-        btn.innerHTML = `<img src="${opt.url}" alt="${opt.label}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+        btn.style.background = opt.bg;
+        btn.innerHTML = `<span style="font-size:1.4rem;">${opt.emoji}</span>`;
         btn.title = opt.label;
         btn.onclick = () => selectAvatar(idx);
         gallery.appendChild(btn);
@@ -1096,24 +1100,35 @@ function selectAvatar(idx) {
     const avatarId = `avatar-${idx}`;
     document.getElementById('profile-photo').value = avatarId;
 
-    // Show the img in the profile avatar
-    const opt = AVATAR_OPTIONS[idx];
-    if (opt) showAvatarImg(opt.url);
+    // Show emoji in the profile avatar display
+    showAvatarIcon(idx);
 
     // Update selection visually
     document.querySelectorAll('.avatar-option').forEach((btn, i) => {
         btn.classList.toggle('selected', i === idx);
-        btn.style.border = i === idx ? '3px solid var(--primary)' : '3px solid transparent';
     });
 }
 
-// Helper: no longer needed for icon, just map to img
+// Helper: show emoji avatar in profile page
 function showAvatarIcon(idx) {
     const opt = AVATAR_OPTIONS[idx];
-    if (opt) showAvatarImg(opt.url);
+    if (!opt) return;
+    const imgEl = document.getElementById('profile-avatar-big');
+    const iconDisplay = document.getElementById('profile-avatar-icon-display');
+    const iconI = document.getElementById('profile-avatar-icon-i');
+    if (imgEl) imgEl.style.display = 'none';
+    if (iconDisplay) {
+        iconDisplay.style.display = 'flex';
+        iconDisplay.style.background = opt.bg;
+    }
+    if (iconI) {
+        iconI.className = '';
+        iconI.style.fontSize = '3.5rem';
+        iconI.innerText = opt.emoji;
+    }
 }
 
-// Helper: show img avatar
+// Helper: show img avatar (URL fallback)
 function showAvatarImg(src) {
     const imgEl = document.getElementById('profile-avatar-big');
     const iconDisplay = document.getElementById('profile-avatar-icon-display');
@@ -1124,7 +1139,7 @@ function showAvatarImg(src) {
     if (iconDisplay) iconDisplay.style.display = 'none';
 }
 
-// Override populateUserData to also render avatar image in header/carnet
+// Override populateUserData to also render avatar emoji in header/carnet
 const _origPopulateUserData = populateUserData;
 window.populateUserData = function(user) {
     _origPopulateUserData(user);
@@ -1134,8 +1149,10 @@ window.populateUserData = function(user) {
         const idx = parseInt(profile.photo.replace('avatar-', ''));
         const opt = AVATAR_OPTIONS[idx];
         if (opt) {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" rx="100" fill="${opt.bg}"/><text x="100" y="130" text-anchor="middle" fill="white" font-size="85" font-family="sans-serif">${opt.emoji}</text></svg>`;
+            const dataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}` ;
             const headerAvatar = document.getElementById('user-avatar');
-            if (headerAvatar) headerAvatar.src = opt.url;
+            if (headerAvatar) headerAvatar.src = dataUrl;
         }
     }
 };
@@ -1146,29 +1163,52 @@ window.populateUserData = function(user) {
 
 const TUTORIAL_STEPS = [
     {
-        title: "¡Bienvenido al Club!",
-        text: "Te preparamos un breve recorrido para que conozcas tu nuevo Portal de Socio.",
-        target: null
+        title: "¡Bienvenido al Club! 👋",
+        text: "Somos el Club Atlético Sarmiento. Este portal es tu espacio como socio. Te mostramos en un minuto todo lo que podés hacer acá.",
+        section: null,
+        icon: '🏟️'
     },
     {
-        title: "Tu Carnet Digital",
-        text: "En la pantalla principal siempre verás tu carnet. Usalo para ingresar a las instalaciones.",
-        target: ".carnet-card"
+        title: "🏠 Inicio",
+        text: "Esta es tu pantalla principal. Acá vas a encontrar tu carnet digital para entrar a las instalaciones, las últimas noticias del club y un resumen de tu cuenta.",
+        section: 'inicio',
+        icon: '🏠'
     },
     {
-        title: "Navegación",
-        text: "Usa este menú para ver horarios, pagar tus cuotas y enterarte de las novedades.",
-        target: ".side-nav"
+        title: "📅 Horarios y Actividades",
+        text: "En esta sección encontrás todas las actividades deportivas y culturales del club. Podés ver los horarios y anotarte a las clases directamente desde acá.",
+        section: 'horarios',
+        icon: '📅'
     },
     {
-        title: "Personaliza tu Perfil",
-        text: "Entrá a 'Mi Perfil' para completar tus datos personales y elegir un avatar divertido.",
-        target: null
+        title: "💳 Mis Cuotas",
+        text: "Acá podés consultar el estado de tu cuenta, ver qué cuotas tenés al día o pendientes, y registrar tus pagos. Mantener la cuota al día te permite acceder a todos los beneficios del club.",
+        section: 'finanzas',
+        icon: '💳'
     },
     {
-        title: "Asistente Virtual",
-        text: "Si tienes alguna duda, haz clic en este icono. ¡Nuestro asistente te ayudará 24/7!",
-        target: ".chatbot-toggle"
+        title: "📰 Noticias y Eventos",
+        text: "Seguí todas las novedades del club: torneos, actos, eventos especiales y mucho más. Podés leer los artículos completos con un solo toque.",
+        section: 'noticias',
+        icon: '📰'
+    },
+    {
+        title: "🏛️ Institucional",
+        text: "Conocé la comisión directiva, los reglamentos internos y la historia del club. Si tenés dudas sobre las normas, encontrás todo acá.",
+        section: 'institucional',
+        icon: '🏛️'
+    },
+    {
+        title: "👤 Mi Perfil",
+        text: "Completá tus datos personales: teléfono, email, dirección y contacto de emergencia. También podés elegir tu avatar de la galería. ¡A más datos completos, mejor atención!",
+        section: 'perfil',
+        icon: '👤'
+    },
+    {
+        title: "💬 Asistente Virtual",
+        text: "¿Tenés alguna duda? El botón verde de la esquina inferior derecha abre nuestro asistente, disponible las 24 horas. ¡Preguntale lo que necesites sobre el club!",
+        section: 'inicio',
+        icon: '💬'
     }
 ];
 
@@ -1188,44 +1228,42 @@ function checkTutorial(userId) {
 
 function renderTutorialStep() {
     const step = TUTORIAL_STEPS[currentTutorialStep];
+
+    // Update icon
+    const iconEl = document.getElementById('tutorial-icon');
+    if (iconEl) iconEl.innerText = step.icon || '📌';
+
     document.getElementById('tutorial-title').innerText = step.title;
     document.getElementById('tutorial-text').innerText = step.text;
 
     // Update dots
-    const dots = document.querySelectorAll('.tutorial-progress .step-dot');
-    // Ensure we have enough dots
     const progressContainer = document.querySelector('.tutorial-progress');
     progressContainer.innerHTML = '';
-    for(let i=0; i<TUTORIAL_STEPS.length; i++) {
+    for (let i = 0; i < TUTORIAL_STEPS.length; i++) {
         const dot = document.createElement('span');
         dot.className = 'step-dot' + (i === currentTutorialStep ? ' active' : '');
         progressContainer.appendChild(dot);
     }
 
+    // Step counter
+    const counterEl = document.getElementById('tutorial-counter');
+    if (counterEl) counterEl.innerText = `${currentTutorialStep + 1} / ${TUTORIAL_STEPS.length}`;
+
     // Button text
     const nextBtn = document.getElementById('tutorial-next-btn');
     if (currentTutorialStep === TUTORIAL_STEPS.length - 1) {
-        nextBtn.innerText = "¡Entendido!";
+        nextBtn.innerText = '¡Empezar a usar el Club!';
     } else {
-        nextBtn.innerText = currentTutorialStep === 0 ? "Comenzar" : "Siguiente";
+        nextBtn.innerText = currentTutorialStep === 0 ? 'Comenzar recorrido →' : 'Siguiente →';
     }
 
-    // Highlight target if exists
-    // Remove previous highlights
-    document.querySelectorAll('.tutorial-highlight').forEach(el => {
-        el.classList.remove('tutorial-highlight');
-        el.style.position = '';
-        el.style.zIndex = '';
-        el.style.background = '';
-    });
-
-    if (step.target) {
-        const targetEl = document.querySelector(step.target);
-        if (targetEl) {
-            targetEl.classList.add('tutorial-highlight');
-            targetEl.style.position = 'relative';
-            targetEl.style.zIndex = '10000';
-            targetEl.style.background = 'var(--surface-color)';
+    // Navigate to the section for this step
+    if (step.section) {
+        // Use the base navigate (not the overridden one that might fire tutorial checks)
+        if (typeof _prevNavigate === 'function') {
+            _prevNavigate(step.section);
+        } else {
+            navigate(step.section);
         }
     }
 }
@@ -1245,16 +1283,10 @@ function skipTutorial() {
 
 function finishTutorial() {
     document.getElementById('tutorial-overlay').classList.remove('active');
-    
-    // Cleanup highlights
-    document.querySelectorAll('.tutorial-highlight').forEach(el => {
-        el.classList.remove('tutorial-highlight');
-        el.style.position = '';
-        el.style.zIndex = '';
-        el.style.background = '';
-    });
-
+    // Go back to inicio
+    navigate('inicio');
     if (tutorialUserId) {
         localStorage.setItem(`club_tutorial_done_${tutorialUserId}`, 'true');
     }
 }
+

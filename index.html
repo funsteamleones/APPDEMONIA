@@ -11,7 +11,7 @@
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="styles.css?v=7">
+    <link rel="stylesheet" href="styles.css?v=8">
     <script src="firebase-config.js"></script>
     <!-- Google reCAPTCHA -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
@@ -691,25 +691,23 @@
     <div class="tutorial-overlay" id="tutorial-overlay">
         <div class="tutorial-card">
             <div class="tutorial-header">
-                <i class="ph-fill ph-student" style="font-size: 2rem; color: var(--primary);"></i>
+                <div class="tutorial-icon-circle">
+                    <span id="tutorial-icon">🏟️</span>
+                </div>
                 <h2 id="tutorial-title">¡Bienvenido al Club!</h2>
+                <span class="tutorial-counter-badge" id="tutorial-counter">1 / 8</span>
             </div>
             <div class="tutorial-body">
                 <p id="tutorial-text">Te preparamos un breve recorrido para que conozcas tu nuevo Portal de Socio.</p>
-                <div class="tutorial-progress">
-                    <span class="step-dot active"></span>
-                    <span class="step-dot"></span>
-                    <span class="step-dot"></span>
-                    <span class="step-dot"></span>
-                </div>
+                <div class="tutorial-progress"></div>
             </div>
             <div class="tutorial-footer">
-                <button class="btn-text" onclick="skipTutorial()">Saltar</button>
-                <button class="btn-primary" id="tutorial-next-btn" onclick="nextTutorialStep()">Comenzar</button>
+                <button class="btn-text" onclick="skipTutorial()">Saltar recorrido</button>
+                <button class="btn-primary" id="tutorial-next-btn" onclick="nextTutorialStep()">Comenzar recorrido →</button>
             </div>
         </div>
     </div>
 
-    <script src="app.js?v=8"></script>
+    <script src="app.js?v=9"></script>
 </body>
 </html>
