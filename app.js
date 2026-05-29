@@ -1029,8 +1029,9 @@ function saveProfile() {
         const idx = parseInt(profile.photo.replace('avatar-', ''));
         const opt = AVATAR_OPTIONS[idx];
         if (opt) {
+            showAvatarIcon(idx);
             const headerAvatar = document.getElementById('user-avatar');
-            if (headerAvatar) headerAvatar.src = opt.url;
+            if (headerAvatar) headerAvatar.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(opt.svg)}`;
         }
     }
 
@@ -1060,37 +1061,45 @@ window.navigate = function(viewId) {
 // AVATAR GALLERY
 // =========================================
 
+// Helper to build SVG devil string
+function _devilSVG(bg, horn, face, accessory) {
+    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="${bg}"/><polygon points="25,37 15,8 38,28" fill="${horn}"/><polygon points="75,37 62,8 85,28" fill="${horn}"/><circle cx="50" cy="57" r="27" fill="${face}"/>${accessory}<circle cx="40" cy="52" r="4.5" fill="#111827"/><circle cx="60" cy="52" r="4.5" fill="#111827"/><circle cx="41.5" cy="50.5" r="1.8" fill="white"/><circle cx="61.5" cy="50.5" r="1.8" fill="white"/><path d="M 40 65 Q 50 73 60 65" stroke="${horn}" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`;
+}
+
 const AVATAR_OPTIONS = [
-    { emoji: '😈🏠', bg: '#16a34a', label: 'Socio' },
-    { emoji: '😈🚒', bg: '#dc2626', label: 'Bombero' },
-    { emoji: '😈💼', bg: '#0ea5e9', label: 'Oficinista' },
-    { emoji: '😈⚽', bg: '#15803d', label: 'Deportista' },
-    { emoji: '😈🍳', bg: '#f97316', label: 'Cocinero' },
-    { emoji: '😈🎸', bg: '#7c3aed', label: 'Músico' },
-    { emoji: '😈👑', bg: '#ca8a04', label: 'Rey' },
-    { emoji: '😈🎨', bg: '#d946ef', label: 'Artista' },
-    { emoji: '😈🔬', bg: '#0891b2', label: 'Científico' },
-    { emoji: '😈📚', bg: '#65a30d', label: 'Estudiante' },
-    { emoji: '😈🏋️', bg: '#ea580c', label: 'Atleta' },
-    { emoji: '😈🎮', bg: '#6366f1', label: 'Gamer' },
-    { emoji: '😈🌿', bg: '#059669', label: 'Naturaleza' },
-    { emoji: '😈🎭', bg: '#e11d48', label: 'Actor' },
-    { emoji: '😈🚀', bg: '#4f46e5', label: 'Astronauta' }
+    { label: 'Clásico',    svg: _devilSVG('#dc2626','#991b1b','#fca5a5', '<rect x="45" y="65" width="4" height="6" rx="1" fill="white"/><rect x="51" y="65" width="4" height="6" rx="1" fill="white"/>') },
+    { label: 'Rey',        svg: _devilSVG('#92400e','#78350f','#fcd5b4', '<polygon points="29,36 37,18 45,28 50,15 55,28 63,18 71,36 69,38 31,38" fill="#fbbf24"/><rect x="30" y="36" width="40" height="6" rx="1" fill="#d97706"/><circle cx="39" cy="21" r="2.5" fill="#f87171"/><circle cx="50" cy="16" r="2.5" fill="#34d399"/><circle cx="61" cy="21" r="2.5" fill="#60a5fa"/>') },
+    { label: 'Chef',       svg: _devilSVG('#c2410c','#9a3412','#fed7aa', '<rect x="34" y="29" width="32" height="5" rx="1" fill="#e2e8f0"/><rect x="36" y="13" width="28" height="18" rx="5" fill="white"/><ellipse cx="50" cy="13" rx="15" ry="6" fill="white"/>') },
+    { label: 'Músico',     svg: _devilSVG('#6d28d9','#4c1d95','#ddd6fe', '<path d="M 18,54 Q 18,25 50,25 Q 82,25 82,54" stroke="#2e1065" stroke-width="5" fill="none"/><rect x="10" y="49" width="14" height="18" rx="5" fill="#2e1065"/><rect x="76" y="49" width="14" height="18" rx="5" fill="#2e1065"/>') },
+    { label: 'Deportista', svg: _devilSVG('#15803d','#14532d','#bbf7d0', '<rect x="25" y="37" width="50" height="8" rx="4" fill="white"/><rect x="27" y="39" width="46" height="4" rx="2" fill="#d1fae5"/>') },
+    { label: 'Estudiante', svg: _devilSVG('#1d4ed8','#1e3a8a','#bfdbfe', '<polygon points="22,33 50,20 78,33 50,36" fill="#1e293b"/><rect x="30" y="31" width="40" height="6" rx="1" fill="#1e293b"/><line x1="66" y1="33" x2="70" y2="44" stroke="#fbbf24" stroke-width="2.5"/><circle cx="70" cy="46" r="3.5" fill="#fbbf24"/>') },
+    { label: 'Artista',    svg: _devilSVG('#be185d','#9d174d','#fbcfe8', '<ellipse cx="54" cy="31" rx="21" ry="8" fill="#9d174d" transform="rotate(-12 54 31)"/><circle cx="40" cy="26" r="4.5" fill="#831843"/>') },
+    { label: 'Pirata',     svg: _devilSVG('#0f766e','#115e59','#a7f3d0', '<ellipse cx="40" cy="52" rx="9" ry="7" fill="#0f172a"/><line x1="33" y1="47" x2="24" y2="39" stroke="#0f172a" stroke-width="2.5"/><line x1="47" y1="47" x2="53" y2="39" stroke="#0f172a" stroke-width="2.5"/>') },
+    { label: 'Astronauta', svg: _devilSVG('#1e3a8a','#172554','#93c5fd', '<circle cx="50" cy="57" r="33" fill="none" stroke="white" stroke-width="7"/><path d="M 22,48 Q 50,36 78,48" stroke="rgba(255,255,255,0.4)" stroke-width="3" fill="none"/>') },
+    { label: 'Ninja',      svg: _devilSVG('#1e293b','#0f172a','#94a3b8', '<rect x="25" y="37" width="50" height="8" rx="3" fill="#0f172a"/><rect x="25" y="57" width="50" height="18" rx="3" fill="#0f172a"/><line x1="25" y1="63" x2="75" y2="63" stroke="#374151" stroke-width="1.5"/>') },
+    { label: 'Científico', svg: _devilSVG('#0891b2','#164e63','#a5f3fc', '<circle cx="40" cy="52" r="8" fill="none" stroke="#1e293b" stroke-width="2.5"/><circle cx="60" cy="52" r="8" fill="none" stroke="#1e293b" stroke-width="2.5"/><line x1="48" y1="52" x2="52" y2="52" stroke="#1e293b" stroke-width="2.5"/><line x1="68" y1="50" x2="74" y2="47" stroke="#1e293b" stroke-width="2.5"/>') },
+    { label: 'Rockero',    svg: _devilSVG('#7f1d1d','#450a0a','#fca5a5', '<path d="M 44 68 Q 50 80 56 68" fill="#ef4444"/><ellipse cx="50" cy="73" rx="5" ry="5" fill="#ef4444"/><circle cx="35" cy="47" r="3" fill="#fbbf24"/>') },
+    { label: 'Médico',     svg: _devilSVG('#166534','#14532d','#d1fae5', '<rect x="36" y="30" width="28" height="6" rx="3" fill="white"/><path d="M 38,60 Q 38,68 50,68 Q 62,68 62,60" stroke="white" stroke-width="3" fill="none"/><line x1="50" y1="56" x2="50" y2="72" stroke="white" stroke-width="3"/>') },
+    { label: 'Vikingo',    svg: _devilSVG('#7c2d12','#451a03','#fed7aa', '<path d="M 30,72 Q 50,86 70,72" fill="#92400e"/><ellipse cx="50" cy="79" rx="18" ry="8" fill="#92400e"/><line x1="34" y1="76" x2="30" y2="88" stroke="#92400e" stroke-width="3"/><line x1="66" y1="76" x2="70" y2="88" stroke="#92400e" stroke-width="3"/>') },
+    { label: 'Detective',  svg: _devilSVG('#374151','#1f2937','#e5e7eb', '<polygon points="24,36 30,18 70,18 76,36" fill="#111827"/><ellipse cx="50" cy="18" rx="28" ry="5" fill="#111827"/>') }
 ];
 
 function renderAvatarGallery(selectedUrl) {
     const gallery = document.getElementById('avatar-gallery');
     if (!gallery) return;
     gallery.innerHTML = '';
-
     AVATAR_OPTIONS.forEach((opt, idx) => {
         const avatarId = `avatar-${idx}`;
+        const isSelected = selectedUrl === avatarId;
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'avatar-option' + (selectedUrl === avatarId ? ' selected' : '');
-        btn.style.background = opt.bg;
-        btn.innerHTML = `<span style="font-size:1.4rem;">${opt.emoji}</span>`;
+        btn.className = 'avatar-option' + (isSelected ? ' selected' : '');
+        btn.style.background = 'none';
+        btn.style.padding = '0';
         btn.title = opt.label;
+        btn.innerHTML = opt.svg;
+        const svgEl = btn.querySelector('svg');
+        if (svgEl) { svgEl.style.cssText = 'width:100%;height:100%;border-radius:50%;display:block;'; }
         btn.onclick = () => selectAvatar(idx);
         gallery.appendChild(btn);
     });
@@ -1099,32 +1108,25 @@ function renderAvatarGallery(selectedUrl) {
 function selectAvatar(idx) {
     const avatarId = `avatar-${idx}`;
     document.getElementById('profile-photo').value = avatarId;
-
-    // Show emoji in the profile avatar display
     showAvatarIcon(idx);
-
-    // Update selection visually
     document.querySelectorAll('.avatar-option').forEach((btn, i) => {
         btn.classList.toggle('selected', i === idx);
     });
 }
 
-// Helper: show emoji avatar in profile page
+// Helper: show SVG devil in profile page big avatar
 function showAvatarIcon(idx) {
     const opt = AVATAR_OPTIONS[idx];
     if (!opt) return;
     const imgEl = document.getElementById('profile-avatar-big');
     const iconDisplay = document.getElementById('profile-avatar-icon-display');
-    const iconI = document.getElementById('profile-avatar-icon-i');
     if (imgEl) imgEl.style.display = 'none';
     if (iconDisplay) {
         iconDisplay.style.display = 'flex';
-        iconDisplay.style.background = opt.bg;
-    }
-    if (iconI) {
-        iconI.className = '';
-        iconI.style.fontSize = '3.5rem';
-        iconI.innerText = opt.emoji;
+        iconDisplay.style.background = 'none';
+        iconDisplay.innerHTML = opt.svg;
+        const svgEl = iconDisplay.querySelector('svg');
+        if (svgEl) svgEl.style.cssText = 'width:100%;height:100%;border-radius:50%;';
     }
 }
 
@@ -1132,14 +1134,11 @@ function showAvatarIcon(idx) {
 function showAvatarImg(src) {
     const imgEl = document.getElementById('profile-avatar-big');
     const iconDisplay = document.getElementById('profile-avatar-icon-display');
-    if (imgEl) {
-        imgEl.style.display = 'block';
-        imgEl.src = src;
-    }
+    if (imgEl) { imgEl.style.display = 'block'; imgEl.src = src; }
     if (iconDisplay) iconDisplay.style.display = 'none';
 }
 
-// Override populateUserData to also render avatar emoji in header/carnet
+// Override populateUserData to also render SVG devil in header/carnet
 const _origPopulateUserData = populateUserData;
 window.populateUserData = function(user) {
     _origPopulateUserData(user);
@@ -1149,10 +1148,8 @@ window.populateUserData = function(user) {
         const idx = parseInt(profile.photo.replace('avatar-', ''));
         const opt = AVATAR_OPTIONS[idx];
         if (opt) {
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" rx="100" fill="${opt.bg}"/><text x="100" y="130" text-anchor="middle" fill="white" font-size="85" font-family="sans-serif">${opt.emoji}</text></svg>`;
-            const dataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}` ;
             const headerAvatar = document.getElementById('user-avatar');
-            if (headerAvatar) headerAvatar.src = dataUrl;
+            if (headerAvatar) headerAvatar.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(opt.svg)}`;
         }
     }
 };
@@ -1257,36 +1254,36 @@ function renderTutorialStep() {
         nextBtn.innerText = currentTutorialStep === 0 ? 'Comenzar recorrido →' : 'Siguiente →';
     }
 
-    // Navigate to the section for this step
+    // Remove previous nav pulse highlights
+    document.querySelectorAll('.tutorial-nav-pulse').forEach(el => el.classList.remove('tutorial-nav-pulse'));
+
+    // Navigate to the section and highlight its nav button
     if (step.section) {
-        // Use the base navigate (not the overridden one that might fire tutorial checks)
-        if (typeof _prevNavigate === 'function') {
-            _prevNavigate(step.section);
-        } else {
-            navigate(step.section);
-        }
+        if (typeof _prevNavigate === 'function') _prevNavigate(step.section);
+        else navigate(step.section);
+
+        // Pulse the matching nav button in sidebar + mobile nav
+        document.querySelectorAll('.nav-btn, .mobile-nav-item').forEach(btn => {
+            const oc = btn.getAttribute('onclick') || '';
+            if (oc.includes(`'${step.section}'`) || oc.includes(`"${step.section}"`)) {
+                btn.classList.add('tutorial-nav-pulse');
+            }
+        });
     }
 }
 
 function nextTutorialStep() {
     currentTutorialStep++;
-    if (currentTutorialStep >= TUTORIAL_STEPS.length) {
-        finishTutorial();
-    } else {
-        renderTutorialStep();
-    }
+    if (currentTutorialStep >= TUTORIAL_STEPS.length) finishTutorial();
+    else renderTutorialStep();
 }
 
-function skipTutorial() {
-    finishTutorial();
-}
+function skipTutorial() { finishTutorial(); }
 
 function finishTutorial() {
     document.getElementById('tutorial-overlay').classList.remove('active');
-    // Go back to inicio
+    document.querySelectorAll('.tutorial-nav-pulse').forEach(el => el.classList.remove('tutorial-nav-pulse'));
     navigate('inicio');
-    if (tutorialUserId) {
-        localStorage.setItem(`club_tutorial_done_${tutorialUserId}`, 'true');
-    }
+    if (tutorialUserId) localStorage.setItem(`club_tutorial_done_${tutorialUserId}`, 'true');
 }
 
