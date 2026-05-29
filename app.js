@@ -196,6 +196,9 @@ function checkAuthAndRender() {
 
         // Navigate to default
         navigate('inicio');
+        
+        // Check for tutorial
+        checkTutorial(currentUser.id);
     } else {
         // Not logged in
         appLayer.style.display = 'none';
@@ -771,23 +774,25 @@ function closeArticleModal(event) {
 // =========================================
 
 const FAQ_KB = [
-    { keywords:['hola','buenas','buenos','saludos','hey'], answer:'👋 ¡Hola! Soy el asistente del Club Sarmiento. Puedo ayudarte con horarios, cuotas, actividades y más. ¿En qué te puedo ayudar?' },
-    { keywords:['cuota','pagar','pago','deuda','debe','factura','mensualidad'], answer:'💰 <b>Cuotas:</b> Consultá tu estado de cuenta en la pestaña "Cuotas". Las cuotas vencen el último día de cada mes. Se puede pagar via MercadoPago o transferencia bancaria.' },
-    { keywords:['horario','actividad','clase','deporte'], answer:'📅 <b>Horarios:</b> La grilla completa de actividades está en la pestaña "Horarios". Podés filtrar por deporte e inscribirte desde ahí.' },
-    { keywords:['inscribir','inscribirme','inscribo','sumar','unirse','anotarse'], answer:'✅ <b>Inscripción:</b> En la pestaña "Horarios" encontrás todas las actividades. Presioná "Inscribirme" en la que te interese.' },
-    { keywords:['evento','eventos','fiesta','torneo','campeonato'], answer:'🎉 <b>Eventos:</b> Revisá la pestaña "Eventos" para ver todos los próximos eventos del club.' },
-    { keywords:['articulo','noticia','noticias','novedad'], answer:'📰 <b>Artículos:</b> En la pestaña "Artículos" encontrás todas las noticias e información institucional publicadas por la administración.' },
-    { keywords:['carnet','credencial','tarjeta','qr'], answer:'🪪 <b>Carnet digital:</b> Tu carnet está en la pantalla de Inicio. Muestra tu nombre, DNI, número de socio y estado.' },
-    { keywords:['contraseña','password','olvidé','olvide','recuperar'], answer:'🔑 Si olvidaste tu contraseña, contactate con la administración del club en secretaría.' },
-    { keywords:['registrar','registro','cuenta','hacerse socio','nuevo socio'], answer:'👤 <b>Registro:</b> Hacé clic en "Crear cuenta" en la pantalla de login. Solo necesitás nombre, DNI y contraseña.' },
-    { keywords:['admin','administrador','secretaria','administracion'], answer:'⚙️ La secretaría atiende de Lunes a Viernes de 9 a 17 hs.' },
-    { keywords:['abre','cierra','cuando','horario club','atencion'], answer:'🕐 El club abre de Lunes a Domingo de 7:00 a 23:00 hs.' },
-    { keywords:['pileta','natacion','nadar','piscina'], answer:'🏊 Contamos con pileta climatizada disponible todo el año. Las clases son para adultos y niños.' },
-    { keywords:['precio','costo','valor','cuanto cuesta','cuanto vale'], answer:'💵 La cuota mensual es de $15.000. Para descuentos familiares consultá en secretaría.' },
-    { keywords:['futbol','fútbol','soccer'], answer:'⚽ Tenemos Escuelita de Fútbol los Lunes a las 16:00 en la Cancha Auxiliar con el Prof. Martín.' },
-    { keywords:['basquet','básquet','basket'], answer:'🏀 Básquet Primera los Lunes a las 20:00 y Formativas los Martes a las 17:00 en el Estadio Principal.' },
-    { keywords:['zumba','baile','fitness'], answer:'💃 Zumba los Martes a las 19:00 en el Salón de Usos Múltiples con la Prof. Ana.' },
-    { keywords:['gracias','ok','genial','perfecto','buenisimo'], answer:'😊 ¡De nada! Si necesitás algo más, acá estoy. ¡Que tengas un excelente día!' }
+    { keywords:['hola','buenas','buenos','saludos','hey','q onda'], answer:'👋 ¡Hola! Soy el asistente virtual del Club Sarmiento. Estoy aquí para guiarte en todo lo que necesites saber sobre la app y el club. ¿En qué te puedo ayudar?' },
+    { keywords:['como funciona','que hago','para que sirve','como usar','tutorial','ayuda'], answer:'📚 <b>¿Cómo usar la App?</b><br>Desde el menú lateral (o en la parte inferior si estás en tu celular) podés acceder a todas las funciones:<br>- <b>Inicio:</b> Muestra tu Carnet Digital.<br>- <b>Horarios:</b> Para ver la grilla e inscribirte en clases.<br>- <b>Cuotas:</b> Para ver tu estado de cuenta.<br>- <b>Mi Perfil:</b> Para cargar tus datos y elegir tu foto.' },
+    { keywords:['registrar','registro','cuenta','hacerse socio','nuevo socio','como me registro','crear cuenta'], answer:'👤 <b>¿Cómo registrarse?</b><br>1. En la pantalla inicial (antes de entrar), hacé clic en "Crear cuenta".<br>2. Ingresá tu Nombre, DNI y crea una contraseña.<br>3. Resolvé el captcha (no soy un robot) y listo. Ya serás parte del club.' },
+    { keywords:['iniciar sesion','login','entrar','ingresar'], answer:'🔑 <b>Inicio de sesión:</b><br>En la pantalla de bienvenida, ingresá tu número de DNI y la contraseña que creaste al registrarte. Si olvidaste tu clave, deberás acercarte a secretaría.' },
+    { keywords:['perfil','mis datos','foto','avatar','cambiar foto','editar datos','modificar'], answer:'🖼️ <b>Mi Perfil:</b><br>Entrá a "Mi Perfil" desde el menú. Allí podrás cargar tu fecha de nacimiento, teléfono, email, dirección y un contacto de emergencia. También podés elegir tu Avatar (foto de perfil) haciendo clic en los íconos de colores. ¡Recordá presionar "Guardar Datos" al terminar!' },
+    { keywords:['cuota','pagar','pago','deuda','debe','factura','mensualidad','precio','costo','valor','cuanto cuesta','cuanto vale'], answer:'💰 <b>Cuotas y Pagos:</b><br>La cuota mensual actual es de $15.000. Podés consultar tu estado de cuenta y si tenés deuda en la pestaña "Cuotas". Las cuotas vencen el último día de cada mes. Podés pagar vía transferencia o MercadoPago. (Para descuentos familiares consultá en secretaría).' },
+    { keywords:['horario','actividad','clase','deporte','grilla'], answer:'📅 <b>Horarios de Actividades:</b><br>En la pestaña "Horarios" podés ver toda la grilla de la semana. Podés filtrar por deporte (Fútbol, Básquet, Natación, etc.).' },
+    { keywords:['inscribir','inscribirme','inscribo','sumar','unirse','anotarse','como me anoto','participar'], answer:'✅ <b>¿Cómo inscribirse a una clase?</b><br>1. Ve a la pestaña "Horarios".<br>2. Buscá la actividad que te interesa (ej. Zumba, Básquet).<br>3. Hacé clic en el botón "Inscribirme".<br>¡Listo! La actividad te aparecerá en la sección "Próximas Actividades" de la pantalla de Inicio.' },
+    { keywords:['evento','eventos','fiesta','torneo','campeonato'], answer:'🎉 <b>Eventos:</b><br>Revisá la pestaña "Eventos" para ver los próximos torneos, encuentros o fiestas organizadas por el club.' },
+    { keywords:['articulo','noticia','noticias','novedad','novedades'], answer:'📰 <b>Noticias:</b><br>En las pestañas "Novedades" y "Artículos" podés leer las últimas comunicaciones oficiales, mejoras en las instalaciones y resultados deportivos.' },
+    { keywords:['carnet','credencial','tarjeta','qr','numero de socio'], answer:'🪪 <b>Tu Carnet Digital:</b><br>Se encuentra en la pantalla de "Inicio". Muestra tu Nombre, DNI, número de socio (arriba a la derecha) y tu estado (Activo/De Baja). Este carnet te sirve para ingresar al club.' },
+    { keywords:['admin','administrador','secretaria','administracion','contacto'], answer:'⚙️ <b>Administración:</b><br>La secretaría atiende de Lunes a Viernes de 9 a 17 hs. Podés acercarte para pagar en efectivo, recuperar tu contraseña o hacer consultas específicas.' },
+    { keywords:['abre','cierra','cuando','horario club','atencion'], answer:'🕐 <b>Horarios del Club:</b><br>El club abre sus puertas de Lunes a Domingo de 7:00 a 23:00 hs.' },
+    { keywords:['pileta','natacion','nadar','piscina'], answer:'🏊 <b>Natación:</b><br>Contamos con pileta climatizada disponible todo el año. Hay clases para adultos (ej. Lunes 18hs) y niños. Anotate en la pestaña "Horarios".' },
+    { keywords:['futbol','fútbol','soccer'], answer:'⚽ <b>Fútbol:</b><br>Tenemos Escuelita de Fútbol (ej. Lunes 16hs en Cancha Auxiliar). Podés anotarte desde "Horarios".' },
+    { keywords:['basquet','básquet','basket'], answer:'🏀 <b>Básquet:</b><br>Primera (Lunes 20hs) y Formativas (Martes 17hs) en el Estadio Principal. Podés anotarte desde "Horarios".' },
+    { keywords:['zumba','baile','fitness'], answer:'💃 <b>Zumba y Fitness:</b><br>Clases los Martes a las 19:00 en el Salón de Usos Múltiples. Anotate desde "Horarios".' },
+    { keywords:['contraseña','password','olvidé','olvide','recuperar'], answer:'🔑 Si olvidaste tu contraseña, debes contactarte con la secretaría del club presencialmente para que te la restablezcan.' },
+    { keywords:['gracias','ok','genial','perfecto','buenisimo','entendido'], answer:'😊 ¡De nada! Si necesitás saber algo más, acá estoy. ¡Que disfrutes del club!' }
 ];
 
 let chatOpen = false;
@@ -801,7 +806,7 @@ function toggleChat() {
     document.getElementById('chat-unread').style.display = 'none';
     if (chatOpen && !chatGreeted) {
         chatGreeted = true;
-        setTimeout(() => addBotMessage('👋 ¡Hola! Soy el asistente del Club Sarmiento. ¿En qué te puedo ayudar hoy?'), 400);
+        setTimeout(() => addBotMessage('👋 ¡Hola! Soy el asistente del Club Sarmiento. ¿En qué te puedo ayudar hoy? Podés preguntarme cosas como "¿Cómo me inscribo a una clase?" o "¿Dónde veo mis cuotas?".'), 400);
     }
 }
 
@@ -834,12 +839,30 @@ function addUserMessage(text) {
 
 function processMessage(text) {
     const lower = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    
+    // Mejorar lógica de coincidencia (evaluar cantidad de keywords encontradas)
+    let bestMatch = null;
+    let maxMatches = 0;
+
     for (const entry of FAQ_KB) {
-        if (entry.keywords.some(kw => lower.includes(kw.normalize('NFD').replace(/[\u0300-\u036f]/g,'')))) {
-            return entry.answer;
+        let matches = 0;
+        for (const kw of entry.keywords) {
+            const kwNorm = kw.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+            if (lower.includes(kwNorm)) {
+                matches++;
+            }
+        }
+        if (matches > maxMatches) {
+            maxMatches = matches;
+            bestMatch = entry;
         }
     }
-    return '🤔 No tengo información sobre eso. Para consultas específicas, contactate con la secretaría del club (Lun-Vie, 9 a 17 hs).';
+
+    if (bestMatch) {
+        return bestMatch.answer;
+    }
+
+    return '🤔 Mmm, no estoy seguro de entender tu pregunta. Podés preguntarme sobre: cómo inscribirse, ver horarios, cómo registrarte, editar tu perfil, o sobre el pago de cuotas.';
 }
 
 function sendChatMessage() {
@@ -1006,13 +1029,11 @@ function saveProfile() {
         const idx = parseInt(profile.photo.replace('avatar-', ''));
         const opt = AVATAR_OPTIONS[idx];
         if (opt) {
-            // Update profile big avatar with icon overlay
-            showAvatarIcon(idx);
-            // Update header with colored SVG
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" rx="100" fill="${opt.bg}"/><text x="100" y="130" text-anchor="middle" fill="white" font-size="100" font-family="sans-serif">${opt.emoji}</text></svg>`;
-            const dataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
+            // Update profile big avatar
+            showAvatarImg(opt.url);
+            // Update header
             const headerAvatar = document.getElementById('user-avatar');
-            if (headerAvatar) headerAvatar.src = dataUrl;
+            if (headerAvatar) headerAvatar.src = opt.url;
         }
     }
 
@@ -1043,21 +1064,12 @@ window.navigate = function(viewId) {
 // =========================================
 
 const AVATAR_OPTIONS = [
-    { icon: 'ph-fill ph-user-circle',       bg: '#16a34a', label: 'Persona',   emoji: '\u{1F464}' },
-    { icon: 'ph-fill ph-smiley',            bg: '#0ea5e9', label: 'Sonrisa',   emoji: '\u{1F60A}' },
-    { icon: 'ph-fill ph-cat',               bg: '#8b5cf6', label: 'Gato',      emoji: '\u{1F431}' },
-    { icon: 'ph-fill ph-dog',               bg: '#f97316', label: 'Perro',     emoji: '\u{1F436}' },
-    { icon: 'ph-fill ph-soccer-ball',       bg: '#15803d', label: 'F\u00fatbol',   emoji: '\u26BD' },
-    { icon: 'ph-fill ph-basketball',        bg: '#ea580c', label: 'B\u00e1squet',  emoji: '\u{1F3C0}' },
-    { icon: 'ph-fill ph-swimming-pool',     bg: '#0284c7', label: 'Nataci\u00f3n', emoji: '\u{1F3CA}' },
-    { icon: 'ph-fill ph-trophy',            bg: '#ca8a04', label: 'Trofeo',    emoji: '\u{1F3C6}' },
-    { icon: 'ph-fill ph-star',              bg: '#eab308', label: 'Estrella',  emoji: '\u2B50' },
-    { icon: 'ph-fill ph-heart',             bg: '#dc2626', label: 'Coraz\u00f3n',  emoji: '\u2764' },
-    { icon: 'ph-fill ph-flower-lotus',      bg: '#d946ef', label: 'Flor',      emoji: '\u{1F338}' },
-    { icon: 'ph-fill ph-tree',              bg: '#059669', label: '\u00c1rbol',    emoji: '\u{1F333}' },
-    { icon: 'ph-fill ph-lightning',         bg: '#7c3aed', label: 'Rayo',      emoji: '\u26A1' },
-    { icon: 'ph-fill ph-fire',              bg: '#ef4444', label: 'Fuego',     emoji: '\u{1F525}' },
-    { icon: 'ph-fill ph-rocket',            bg: '#6366f1', label: 'Cohete',    emoji: '\u{1F680}' }
+    { url: 'assets/diablito_bombero_1780086086062.png', label: 'Bombero' },
+    { url: 'assets/diablito_secretario_1780086098301.png', label: 'Secretario' },
+    { url: 'assets/diablito_deportista_1780086132250.png', label: 'Deportista' },
+    { url: 'assets/diablito_cocinero_1780086146152.png', label: 'Cocinero' },
+    { url: 'assets/diablito_musico_1780086161762.png', label: 'Músico' },
+    { url: 'assets/diablito_rey_1780086174142.png', label: 'Rey' }
 ];
 
 function renderAvatarGallery(selectedUrl) {
@@ -1070,8 +1082,10 @@ function renderAvatarGallery(selectedUrl) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'avatar-option' + (selectedUrl === avatarId ? ' selected' : '');
-        btn.style.background = opt.bg;
-        btn.innerHTML = `<i class="${opt.icon}"></i>`;
+        btn.style.background = 'transparent';
+        btn.style.padding = '0';
+        btn.style.border = selectedUrl === avatarId ? '3px solid var(--primary)' : '3px solid transparent';
+        btn.innerHTML = `<img src="${opt.url}" alt="${opt.label}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
         btn.title = opt.label;
         btn.onclick = () => selectAvatar(idx);
         gallery.appendChild(btn);
@@ -1082,31 +1096,24 @@ function selectAvatar(idx) {
     const avatarId = `avatar-${idx}`;
     document.getElementById('profile-photo').value = avatarId;
 
-    // Show the icon in the profile avatar
-    showAvatarIcon(idx);
+    // Show the img in the profile avatar
+    const opt = AVATAR_OPTIONS[idx];
+    if (opt) showAvatarImg(opt.url);
 
     // Update selection visually
     document.querySelectorAll('.avatar-option').forEach((btn, i) => {
         btn.classList.toggle('selected', i === idx);
+        btn.style.border = i === idx ? '3px solid var(--primary)' : '3px solid transparent';
     });
 }
 
-// Helper: show icon avatar in profile page
+// Helper: no longer needed for icon, just map to img
 function showAvatarIcon(idx) {
     const opt = AVATAR_OPTIONS[idx];
-    if (!opt) return;
-    const imgEl = document.getElementById('profile-avatar-big');
-    const iconDisplay = document.getElementById('profile-avatar-icon-display');
-    const iconI = document.getElementById('profile-avatar-icon-i');
-    if (imgEl) imgEl.style.display = 'none';
-    if (iconDisplay) {
-        iconDisplay.style.display = 'flex';
-        iconDisplay.style.background = opt.bg;
-        iconI.className = opt.icon;
-    }
+    if (opt) showAvatarImg(opt.url);
 }
 
-// Helper: show img avatar (initials fallback)
+// Helper: show img avatar
 function showAvatarImg(src) {
     const imgEl = document.getElementById('profile-avatar-big');
     const iconDisplay = document.getElementById('profile-avatar-icon-display');
@@ -1117,7 +1124,7 @@ function showAvatarImg(src) {
     if (iconDisplay) iconDisplay.style.display = 'none';
 }
 
-// Override populateUserData to also render avatar icon in header/carnet
+// Override populateUserData to also render avatar image in header/carnet
 const _origPopulateUserData = populateUserData;
 window.populateUserData = function(user) {
     _origPopulateUserData(user);
@@ -1127,10 +1134,127 @@ window.populateUserData = function(user) {
         const idx = parseInt(profile.photo.replace('avatar-', ''));
         const opt = AVATAR_OPTIONS[idx];
         if (opt) {
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" rx="100" fill="${opt.bg}"/><text x="100" y="130" text-anchor="middle" fill="white" font-size="100" font-family="sans-serif">${opt.emoji}</text></svg>`;
-            const dataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
             const headerAvatar = document.getElementById('user-avatar');
-            if (headerAvatar) headerAvatar.src = dataUrl;
+            if (headerAvatar) headerAvatar.src = opt.url;
         }
     }
 };
+
+// =========================================
+// TUTORIAL LOGIC
+// =========================================
+
+const TUTORIAL_STEPS = [
+    {
+        title: "¡Bienvenido al Club!",
+        text: "Te preparamos un breve recorrido para que conozcas tu nuevo Portal de Socio.",
+        target: null
+    },
+    {
+        title: "Tu Carnet Digital",
+        text: "En la pantalla principal siempre verás tu carnet. Usalo para ingresar a las instalaciones.",
+        target: ".carnet-card"
+    },
+    {
+        title: "Navegación",
+        text: "Usa este menú para ver horarios, pagar tus cuotas y enterarte de las novedades.",
+        target: ".side-nav"
+    },
+    {
+        title: "Personaliza tu Perfil",
+        text: "Entrá a 'Mi Perfil' para completar tus datos personales y elegir un avatar divertido.",
+        target: null
+    },
+    {
+        title: "Asistente Virtual",
+        text: "Si tienes alguna duda, haz clic en este icono. ¡Nuestro asistente te ayudará 24/7!",
+        target: ".chatbot-toggle"
+    }
+];
+
+let currentTutorialStep = 0;
+let tutorialUserId = null;
+
+function checkTutorial(userId) {
+    tutorialUserId = userId;
+    const isDone = localStorage.getItem(`club_tutorial_done_${userId}`);
+    if (!isDone) {
+        // Start tutorial
+        currentTutorialStep = 0;
+        document.getElementById('tutorial-overlay').classList.add('active');
+        renderTutorialStep();
+    }
+}
+
+function renderTutorialStep() {
+    const step = TUTORIAL_STEPS[currentTutorialStep];
+    document.getElementById('tutorial-title').innerText = step.title;
+    document.getElementById('tutorial-text').innerText = step.text;
+
+    // Update dots
+    const dots = document.querySelectorAll('.tutorial-progress .step-dot');
+    // Ensure we have enough dots
+    const progressContainer = document.querySelector('.tutorial-progress');
+    progressContainer.innerHTML = '';
+    for(let i=0; i<TUTORIAL_STEPS.length; i++) {
+        const dot = document.createElement('span');
+        dot.className = 'step-dot' + (i === currentTutorialStep ? ' active' : '');
+        progressContainer.appendChild(dot);
+    }
+
+    // Button text
+    const nextBtn = document.getElementById('tutorial-next-btn');
+    if (currentTutorialStep === TUTORIAL_STEPS.length - 1) {
+        nextBtn.innerText = "¡Entendido!";
+    } else {
+        nextBtn.innerText = currentTutorialStep === 0 ? "Comenzar" : "Siguiente";
+    }
+
+    // Highlight target if exists
+    // Remove previous highlights
+    document.querySelectorAll('.tutorial-highlight').forEach(el => {
+        el.classList.remove('tutorial-highlight');
+        el.style.position = '';
+        el.style.zIndex = '';
+        el.style.background = '';
+    });
+
+    if (step.target) {
+        const targetEl = document.querySelector(step.target);
+        if (targetEl) {
+            targetEl.classList.add('tutorial-highlight');
+            targetEl.style.position = 'relative';
+            targetEl.style.zIndex = '10000';
+            targetEl.style.background = 'var(--surface-color)';
+        }
+    }
+}
+
+function nextTutorialStep() {
+    currentTutorialStep++;
+    if (currentTutorialStep >= TUTORIAL_STEPS.length) {
+        finishTutorial();
+    } else {
+        renderTutorialStep();
+    }
+}
+
+function skipTutorial() {
+    finishTutorial();
+}
+
+function finishTutorial() {
+    document.getElementById('tutorial-overlay').classList.remove('active');
+    
+    // Cleanup highlights
+    document.querySelectorAll('.tutorial-highlight').forEach(el => {
+        el.classList.remove('tutorial-highlight');
+        el.style.position = '';
+        el.style.zIndex = '';
+        el.style.background = '';
+    });
+
+    if (tutorialUserId) {
+        localStorage.setItem(`club_tutorial_done_${tutorialUserId}`, 'true');
+    }
+}
