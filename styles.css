@@ -339,6 +339,7 @@ body {
     align-items: center;
     gap: 16px;
     position: relative;
+    z-index: 9999;
 }
 
 .greeting {
@@ -939,7 +940,7 @@ body {
     box-shadow: var(--shadow-lg);
     display: none;
     flex-direction: column;
-    z-index: 100;
+    z-index: 9999;
     overflow: hidden;
 }
 
