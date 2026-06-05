@@ -260,7 +260,7 @@ function populateUserData(user) {
             activitiesList.innerHTML = '';
             user.activities.forEach(act => {
                 activitiesList.innerHTML += `
-                    <div class="activity-card">
+                    <div class="activity-card" style="position: relative;">
                         <div class="activity-icon ${act.color}">
                             <i class="ph-fill ${act.icon}"></i>
                         </div>
@@ -268,6 +268,9 @@ function populateUserData(user) {
                             <h3>${act.name}</h3>
                             <p>${act.time}</p>
                         </div>
+                        <button class="btn-delete" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%);" onclick="unenrollActivity('${act.name}')" title="Dar de baja de esta actividad">
+                            <i class="ph ph-trash"></i>
+                        </button>
                     </div>
                 `;
             });
@@ -569,6 +572,27 @@ function enrollActivity(name, time, color, icon) {
     alert(`¡Inscripción exitosa en ${name}!`);
     
     // Refresh dashboard
+    populateUserData(users[userIndex]);
+}
+
+function unenrollActivity(name) {
+    if (!confirm(`¿Estás seguro de que deseas darte de baja de ${name}?`)) return;
+
+    let currentUser = getCurrentUser();
+    if (!currentUser) return;
+
+    const users = getUsers();
+    const userIndex = users.findIndex(u => u.id === currentUser.id);
+    
+    if (userIndex === -1) return;
+    if (!users[userIndex].activities) return;
+
+    users[userIndex].activities = users[userIndex].activities.filter(act => act.name !== name);
+    saveUsers(users);
+
+    localStorage.setItem('club_current_user', JSON.stringify(users[userIndex]));
+
+    alert(`Te has dado de baja de ${name}.`);
     populateUserData(users[userIndex]);
 }
 
