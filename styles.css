@@ -336,6 +336,7 @@ body {
     display: flex;
     align-items: center;
     gap: 16px;
+    position: relative;
 }
 
 .greeting {
@@ -824,6 +825,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .admin-toolbar h3 {
@@ -1028,7 +1031,7 @@ body {
 
     /* --- Auth Layer --- */
     .auth-container {
-        max-width: 100%;
+        width: calc(100% - 32px);
         margin: 16px;
         padding: 32px 24px;
         border-radius: var(--radius-md);
