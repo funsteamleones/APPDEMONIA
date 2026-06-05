@@ -328,9 +328,12 @@
                                     <input type="tel" id="profile-emergency-phone" class="profile-input" placeholder="Ej: 2616-654321" oninput="this.value=this.value.replace(/[^0-9\-\+\s]/g,'')">
                                 </div>
                             </div>
-                            <div style="margin-top:24px;">
+                            <div style="margin-top:24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
                                 <button class="btn-primary" onclick="saveProfile()"><i class="ph ph-floppy-disk"></i> Guardar Datos</button>
-                                <p id="profile-msg" class="success-msg" style="margin-top:8px;"></p>
+                                <button class="btn-secondary" onclick="logout()" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px 24px; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                                    <i class="ph ph-sign-out"></i> Cerrar Sesión
+                                </button>
+                                <p id="profile-msg" class="success-msg" style="width: 100%; margin-top: 8px;"></p>
                             </div>
                         </div>
                     </div>
