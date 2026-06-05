@@ -318,6 +318,8 @@ body {
     display: flex;
     align-items: center;
     padding: 0 40px;
+    position: relative;
+    z-index: 1000;
 }
 
 .header-content {
@@ -378,6 +380,25 @@ body {
     position: relative;
     margin-left: 12px;
 }
+
+.badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 5px;
+    border: 2px solid var(--surface-color);
+}
+
 
 /* Main scrollable area */
 .app-main {
