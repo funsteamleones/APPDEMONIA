@@ -1311,3 +1311,171 @@ function finishTutorial() {
     if (tutorialUserId) localStorage.setItem(`club_tutorial_done_${tutorialUserId}`, 'true');
 }
 
+// =========================================
+// SUPABASE & DYNAMIC ACTIVITIES
+// =========================================
+
+let supabaseClient = null;
+
+if (window.supabaseConfig && window.supabaseConfig.url && window.supabaseConfig.key && window.supabaseConfig.url !== 'TU_SUPABASE_URL_AQUI') {
+    supabaseClient = window.supabase.createClient(window.supabaseConfig.url, window.supabaseConfig.key);
+}
+
+let defaultActivities = [
+    { id: 1, name: "Escuelita de Fútbol", category: "Fútbol", day: "Lunes", time: "16:00 hs", prof: "Prof. Martín", place: "Cancha Auxiliar", color: "green", icon: "ph-soccer-ball" },
+    { id: 2, name: "Natación Adultos", category: "Natación", day: "Lunes", time: "18:00 hs", prof: "Prof. Laura", place: "Pileta Climatizada", color: "blue", icon: "ph-swimming-pool" },
+    { id: 3, name: "Básquet Primera", category: "Básquet", day: "Lunes", time: "20:00 hs", prof: "Prof. Diego", place: "Estadio Principal", color: "orange", icon: "ph-basketball" },
+    { id: 4, name: "Básquet Formativas", category: "Básquet", day: "Martes", time: "17:00 hs", prof: "Prof. Diego", place: "Estadio Principal", color: "orange", icon: "ph-basketball" },
+    { id: 5, name: "Zumba", category: "Todos", day: "Martes", time: "19:00 hs", prof: "Prof. Ana", place: "Salón de Usos Múltiples", color: "purple", icon: "ph-activity" }
+];
+
+async function loadActivities() {
+    let activities = [];
+    if (supabaseClient) {
+        try {
+            const { data, error } = await supabaseClient.from('activities').select('*').order('id', { ascending: true });
+            if (error) throw error;
+            activities = data;
+        } catch (e) {
+            console.error('Error loading activities from Supabase', e);
+            activities = dbGet('club_activities');
+        }
+    } else {
+        activities = dbGet('club_activities');
+    }
+    
+    if (!activities || activities.length === 0) {
+        activities = defaultActivities;
+        dbSet('club_activities', activities);
+    }
+    
+    window.currentActivities = activities;
+    renderActivities(activities);
+    renderAdminActivities(activities);
+}
+
+function renderActivities(activities) {
+    const container = document.getElementById('schedule-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    
+    days.forEach(day => {
+        const dayActs = activities.filter(a => a.day === day);
+        if (dayActs.length > 0) {
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'schedule-day';
+            dayDiv.innerHTML = `<h3>${day}</h3>`;
+            
+            dayActs.forEach(act => {
+                const itemHtml = `
+                    <div class="schedule-item" data-category="${act.category}">
+                        <div class="time">${act.time}</div>
+                        <div class="details">
+                            <h4>${act.name}</h4>
+                            <span>${act.place} • ${act.prof}</span>
+                        </div>
+                        <button class="btn-enroll" onclick="enrollActivity('${act.name}', '${act.day} ${act.time}', '${act.color}', '${act.icon}')">Inscribirme</button>
+                    </div>
+                `;
+                dayDiv.innerHTML += itemHtml;
+            });
+            container.appendChild(dayDiv);
+        }
+    });
+}
+
+function renderAdminActivities(activities) {
+    const list = document.getElementById('admin-activities-list');
+    if (!list) return;
+    
+    list.innerHTML = '';
+    activities.forEach(act => {
+        list.innerHTML += `
+            <tr>
+                <td><strong>${act.name}</strong></td>
+                <td>${act.category}</td>
+                <td>${act.day} - ${act.time}</td>
+                <td>${act.place} / ${act.prof}</td>
+                <td>
+                    <button class="btn-delete" onclick="deleteAdminActivity(${act.id})" title="Eliminar"><i class="ph ph-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+async function saveAdminActivity() {
+    const name = document.getElementById('admin-act-name').value;
+    const category = document.getElementById('admin-act-category').value || 'Todos';
+    const day = document.getElementById('admin-act-day').value;
+    const time = document.getElementById('admin-act-time').value;
+    const prof = document.getElementById('admin-act-prof').value;
+    const place = document.getElementById('admin-act-place').value;
+    const color = document.getElementById('admin-act-color').value;
+    const icon = document.getElementById('admin-act-icon').value;
+    
+    if (!name || !day || !time) {
+        alert("Completar Nombre, Día y Horario.");
+        return;
+    }
+    
+    const newAct = {
+        id: Date.now(),
+        name, category, day, time, prof, place, color, icon
+    };
+    
+    if (supabaseClient) {
+        try {
+            const { error } = await supabaseClient.from('activities').insert([newAct]);
+            if (error) throw error;
+        } catch (e) {
+            console.error('Error saving to Supabase', e);
+            alert('Error al conectar con Supabase. Asegúrate de haber creado la tabla activities. Se guardó localmente.');
+            let localActs = dbGet('club_activities');
+            if(!localActs || localActs.length === 0) localActs = defaultActivities;
+            localActs.push(newAct);
+            dbSet('club_activities', localActs);
+        }
+    } else {
+        let localActs = dbGet('club_activities');
+        if (!localActs || localActs.length === 0) localActs = defaultActivities;
+        localActs.push(newAct);
+        dbSet('club_activities', localActs);
+    }
+    
+    document.getElementById('admin-act-name').value = '';
+    document.getElementById('admin-act-time').value = '';
+    
+    const msg = document.getElementById('admin-act-msg');
+    msg.innerText = "¡Actividad guardada!";
+    setTimeout(() => msg.innerText='', 3000);
+    
+    loadActivities();
+}
+
+async function deleteAdminActivity(id) {
+    if(!confirm("¿Seguro que deseas eliminar esta actividad?")) return;
+    
+    if (supabaseClient) {
+        try {
+            const { error } = await supabaseClient.from('activities').delete().eq('id', id);
+            if (error) throw error;
+        } catch (e) {
+            console.error('Error deleting from Supabase', e);
+        }
+    } else {
+        let localActs = dbGet('club_activities');
+        localActs = localActs.filter(a => a.id !== id);
+        dbSet('club_activities', localActs);
+    }
+    
+    loadActivities();
+}
+
+// Ensure activities are loaded when app starts
+document.addEventListener('DOMContentLoaded', () => {
+    loadActivities();
+});

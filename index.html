@@ -387,54 +387,8 @@
                         <button class="filter-btn" onclick="filterSchedule('Natación')">Natación</button>
                     </div>
 
-                    <div class="schedule-grid">
-                        <div class="schedule-day">
-                            <h3>Lunes</h3>
-                            <div class="schedule-item" data-category="Fútbol">
-                                <div class="time">16:00</div>
-                                <div class="details">
-                                    <h4>Escuelita de Fútbol</h4>
-                                    <span>Cancha Auxiliar • Prof. Martín</span>
-                                </div>
-                                <button class="btn-enroll" onclick="enrollActivity('Escuelita de Fútbol', 'Lunes 16:00 hs', 'green', 'ph-soccer-ball')">Inscribirme</button>
-                            </div>
-                            <div class="schedule-item" data-category="Natación">
-                                <div class="time">18:00</div>
-                                <div class="details">
-                                    <h4>Natación Adultos</h4>
-                                    <span>Pileta Climatizada • Prof. Laura</span>
-                                </div>
-                                <button class="btn-enroll" onclick="enrollActivity('Natación Adultos', 'Lunes 18:00 hs', 'blue', 'ph-swimming-pool')">Inscribirme</button>
-                            </div>
-                            <div class="schedule-item" data-category="Básquet">
-                                <div class="time">20:00</div>
-                                <div class="details">
-                                    <h4>Básquet Primera</h4>
-                                    <span>Estadio Principal • Prof. Diego</span>
-                                </div>
-                                <button class="btn-enroll" onclick="enrollActivity('Básquet Primera', 'Lunes 20:00 hs', 'orange', 'ph-basketball')">Inscribirme</button>
-                            </div>
-                        </div>
-
-                        <div class="schedule-day">
-                            <h3>Martes</h3>
-                            <div class="schedule-item" data-category="Básquet">
-                                <div class="time">17:00</div>
-                                <div class="details">
-                                    <h4>Básquet Formativas</h4>
-                                    <span>Estadio Principal • Prof. Diego</span>
-                                </div>
-                                <button class="btn-enroll" onclick="enrollActivity('Básquet Formativas', 'Martes 17:00 hs', 'orange', 'ph-basketball')">Inscribirme</button>
-                            </div>
-                            <div class="schedule-item" data-category="Todos">
-                                <div class="time">19:00</div>
-                                <div class="details">
-                                    <h4>Zumba</h4>
-                                    <span>Salón de Usos Múltiples • Prof. Ana</span>
-                                </div>
-                                <button class="btn-enroll" onclick="enrollActivity('Zumba', 'Martes 19:00 hs', 'purple', 'ph-activity')">Inscribirme</button>
-                            </div>
-                        </div>
+                    <div class="schedule-grid" id="schedule-container">
+                        <!-- Actividades cargadas dinámicamente aquí -->
                     </div>
                 </section>
 
@@ -515,6 +469,86 @@
                                     </tr>
                                 </thead>
                                 <tbody id="admin-users-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Gestión de Actividades -->
+                    <div class="admin-panel" style="margin-top: 24px;">
+                        <div class="admin-toolbar">
+                            <h3>Gestión de Actividades</h3>
+                            <button class="btn-primary" onclick="document.getElementById('admin-activity-form').style.display = document.getElementById('admin-activity-form').style.display === 'none' ? 'block' : 'none'"><i class="ph ph-plus-circle"></i> Nueva Actividad</button>
+                        </div>
+                        <div class="publish-form" id="admin-activity-form" style="display:none; margin-bottom: 24px;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Nombre / Título</label>
+                                    <input type="text" id="admin-act-name" placeholder="Ej: Básquet Primera">
+                                </div>
+                                <div class="form-group">
+                                    <label>Categoría (Deporte)</label>
+                                    <input type="text" id="admin-act-category" placeholder="Ej: Básquet">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Día(s) de la semana</label>
+                                    <select id="admin-act-day" class="select-input">
+                                        <option value="Lunes">Lunes</option>
+                                        <option value="Martes">Martes</option>
+                                        <option value="Miércoles">Miércoles</option>
+                                        <option value="Jueves">Jueves</option>
+                                        <option value="Viernes">Viernes</option>
+                                        <option value="Sábado">Sábado</option>
+                                        <option value="Domingo">Domingo</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Horario</label>
+                                    <input type="text" id="admin-act-time" placeholder="Ej: 20:00 hs">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Profesor</label>
+                                    <input type="text" id="admin-act-prof" placeholder="Ej: Prof. Diego">
+                                </div>
+                                <div class="form-group">
+                                    <label>Lugar</label>
+                                    <input type="text" id="admin-act-place" placeholder="Ej: Estadio Principal">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Color (Estilo)</label>
+                                    <select id="admin-act-color" class="select-input">
+                                        <option value="blue">Azul</option>
+                                        <option value="green">Verde</option>
+                                        <option value="orange">Naranja</option>
+                                        <option value="purple">Púrpura</option>
+                                        <option value="yellow">Amarillo</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Ícono (Phosphor)</label>
+                                    <input type="text" id="admin-act-icon" placeholder="Ej: ph-basketball" value="ph-activity">
+                                </div>
+                            </div>
+                            <button class="btn-primary" onclick="saveAdminActivity()"><i class="ph ph-floppy-disk"></i> Guardar Actividad</button>
+                            <p id="admin-act-msg" class="success-msg" style="margin-top:8px;"></p>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Actividad</th>
+                                        <th>Categoría</th>
+                                        <th>Días y Horarios</th>
+                                        <th>Lugar/Profesor</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-activities-list"></tbody>
                             </table>
                         </div>
                     </div>
@@ -717,6 +751,8 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
     <script src="app.js?v=11"></script>
 </body>
 </html>
