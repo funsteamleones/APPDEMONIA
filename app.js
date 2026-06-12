@@ -1503,6 +1503,7 @@ async function deleteAdminActivity(id) {
             if (error) throw error;
         } catch (e) {
             console.error('Error deleting from Supabase', e);
+            alert('Error al borrar en Supabase: ' + (e.message || 'Error desconocido. Revisa los permisos RLS.'));
         }
     } else {
         let localActs = dbGet('club_activities');
