@@ -1359,7 +1359,7 @@ function renderActivities(activities) {
     const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
     
     days.forEach(day => {
-        const dayActs = activities.filter(a => a.day === day);
+        const dayActs = activities.filter(a => a.day && a.day.includes(day));
         if (dayActs.length > 0) {
             const dayDiv = document.createElement('div');
             dayDiv.className = 'schedule-day';
@@ -1407,7 +1407,9 @@ function renderAdminActivities(activities) {
 async function saveAdminActivity() {
     const name = document.getElementById('admin-act-name').value;
     const category = document.getElementById('admin-act-category').value || 'Todos';
-    const day = document.getElementById('admin-act-day').value;
+    
+    const dayCheckboxes = document.querySelectorAll('.admin-act-day-cb:checked');
+    const day = Array.from(dayCheckboxes).map(cb => cb.value).join(', ');
     const time = document.getElementById('admin-act-time').value;
     const prof = document.getElementById('admin-act-prof').value;
     const place = document.getElementById('admin-act-place').value;
@@ -1444,6 +1446,7 @@ async function saveAdminActivity() {
     
     // Reset form
     document.getElementById('admin-act-name').value = '';
+    document.querySelectorAll('.admin-act-day-cb').forEach(cb => cb.checked = false);
     document.getElementById('admin-act-time').value = '';
     document.getElementById('admin-act-prof').value = '';
     document.getElementById('admin-act-place').value = '';
@@ -1477,7 +1480,10 @@ function editAdminActivity(id) {
     
     document.getElementById('admin-act-name').value = act.name;
     document.getElementById('admin-act-category').value = act.category;
-    document.getElementById('admin-act-day').value = act.day;
+    
+    document.querySelectorAll('.admin-act-day-cb').forEach(cb => {
+        cb.checked = act.day && act.day.includes(cb.value);
+    });
     document.getElementById('admin-act-time').value = act.time;
     document.getElementById('admin-act-prof').value = act.prof;
     document.getElementById('admin-act-place').value = act.place;
