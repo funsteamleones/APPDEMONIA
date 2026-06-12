@@ -1,12 +1,21 @@
 /* =========================================
-   DATABASE SIMULATION (localStorage)
+   DATABASE (Supabase + localStorage fallback)
    ========================================= */
 
-// Iniciar base de datos si no existe
+// Obtener usuario logueado actualmente
+function getCurrentUser() {
+    const userStr = localStorage.getItem('club_current_user');
+    return userStr ? JSON.parse(userStr) : null;
+}
+
+// DB helpers para datos no-usuario
+function dbGet(key) { return JSON.parse(localStorage.getItem(key)); }
+function dbSet(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
 function initDB() {
+    // Solo se usa si no hay Supabase configurado
+    if (window.supabaseClient) return;
     let users = JSON.parse(localStorage.getItem('club_users')) || [];
-    
-    // Asegurar que exista el admin numérico
     const adminExists = users.find(u => u.dni === '99999999');
     if (!adminExists) {
         users.push({ id: 'admin_99', name: 'Admin Club', dni: '99999999', password: 'admin', role: 'admin', activities: [] });
@@ -14,20 +23,12 @@ function initDB() {
     }
 }
 
-// Obtener todos los usuarios
 function getUsers() {
     return JSON.parse(localStorage.getItem('club_users')) || [];
 }
 
-// Guardar usuarios
 function saveUsers(users) {
     localStorage.setItem('club_users', JSON.stringify(users));
-}
-
-// Obtener usuario logueado actualmente
-function getCurrentUser() {
-    const userStr = localStorage.getItem('club_current_user');
-    return userStr ? JSON.parse(userStr) : null;
 }
 
 // =========================================
@@ -44,7 +45,7 @@ function toggleAuthForm(formId) {
     document.getElementById('reg-success').innerText = '';
 }
 
-function register() {
+async function register() {
     const name = document.getElementById('reg-name').value.trim();
     const dni = document.getElementById('reg-dni').value.trim();
     const password = document.getElementById('reg-password').value;
@@ -76,41 +77,51 @@ function register() {
         return;
     }
 
-    const users = getUsers();
-    
-    // Verificar si ya existe
-    if (users.find(u => u.dni === dni)) {
-        errorEl.innerText = 'El DNI ingresado ya está registrado.';
-        return;
-    }
-
-    // Crear nuevo usuario
     const newUser = {
         id: Date.now().toString(),
-        name: name,
-        dni: dni,
-        password: password,
-        role: 'socio'
+        name, dni, password,
+        role: 'socio',
+        status: 'activo',
+        activities: []
     };
 
-    users.push(newUser);
-    saveUsers(users);
+    if (window.supabaseClient) {
+        try {
+            // Chequear si DNI ya existe
+            const { data: existing } = await window.supabaseClient.from('users').select('id').eq('dni', dni).maybeSingle();
+            if (existing) {
+                errorEl.innerText = 'El DNI ingresado ya está registrado.';
+                return;
+            }
+            const { error } = await window.supabaseClient.from('users').insert([newUser]);
+            if (error) throw error;
+        } catch (e) {
+            console.error('Supabase register error', e);
+            // Fallback local
+            const users = getUsers();
+            if (users.find(u => u.dni === dni)) { errorEl.innerText = 'El DNI ingresado ya está registrado.'; return; }
+            users.push(newUser);
+            saveUsers(users);
+        }
+    } else {
+        const users = getUsers();
+        if (users.find(u => u.dni === dni)) { errorEl.innerText = 'El DNI ingresado ya está registrado.'; return; }
+        users.push(newUser);
+        saveUsers(users);
+    }
 
     successEl.innerText = '¡Registro exitoso! Ya puedes iniciar sesión.';
-    
-    // Clear inputs
     document.getElementById('reg-name').value = '';
     document.getElementById('reg-dni').value = '';
     document.getElementById('reg-password').value = '';
 
-    // Cambiar al form de login tras un breve delay
     setTimeout(() => {
         toggleAuthForm('login');
         document.getElementById('login-dni').value = dni;
     }, 1500);
 }
 
-function login() {
+async function login() {
     const dni = document.getElementById('login-dni').value.trim();
     const password = document.getElementById('login-password').value;
     const errorEl = document.getElementById('login-error');
@@ -122,18 +133,35 @@ function login() {
         return;
     }
 
-    const users = getUsers();
-    // En caso de duplicados por pruebas viejas, tomar el último creado
-    const matchingUsers = users.filter(u => u.dni === dni && u.password === password);
-    const user = matchingUsers[matchingUsers.length - 1];
+    let user = null;
+
+    if (window.supabaseClient) {
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('users')
+                .select('*')
+                .eq('dni', dni)
+                .eq('password', password)
+                .maybeSingle();
+            if (error) throw error;
+            user = data;
+        } catch (e) {
+            console.error('Supabase login error', e);
+            // Fallback local
+            const users = getUsers();
+            const matches = users.filter(u => u.dni === dni && u.password === password);
+            user = matches[matches.length - 1] || null;
+        }
+    } else {
+        const users = getUsers();
+        const matches = users.filter(u => u.dni === dni && u.password === password);
+        user = matches[matches.length - 1] || null;
+    }
 
     if (user) {
         if (user.status === 'baja') {
             alert('❌ Tu cuenta ha sido dada de baja o suspendida por la administración.');
-            // Aún así los dejamos entrar para que vean el carnet rojo como pidió el usuario,
-            // pero con el alert queda clarísimo.
         }
-        // Login exitoso
         localStorage.setItem('club_current_user', JSON.stringify(user));
         document.getElementById('login-password').value = '';
         checkAuthAndRender();
@@ -361,23 +389,40 @@ function navigate(viewId) {
 // ADMIN LOGIC
 // =========================================
 
-function refreshAdminTable() {
-    const users = getUsers();
+async function refreshAdminTable() {
     const tbody = document.getElementById('admin-users-list');
-    
     if (!tbody) return;
 
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-muted);">Cargando socios...</td></tr>';
+
+    let users = [];
+    if (window.supabaseClient) {
+        try {
+            const { data, error } = await window.supabaseClient.from('users').select('*').order('name', { ascending: true });
+            if (error) throw error;
+            users = data || [];
+        } catch (e) {
+            console.error('Supabase error loading users', e);
+            users = getUsers();
+        }
+    } else {
+        users = getUsers();
+    }
+
     tbody.innerHTML = '';
+
+    if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-muted);">No hay socios registrados aún.</td></tr>';
+        return;
+    }
 
     users.forEach(u => {
         const tr = document.createElement('tr');
         const isBaja = u.status === 'baja';
         const tagClass = u.role === 'admin' ? 'tag-active' : (isBaja ? 'tag-inactive' : 'tag-active');
         const statusText = u.role === 'admin' ? 'Administrador' : (isBaja ? 'De Baja' : 'Activo');
-        
-        // Evitar borrar al admin
-        const deleteBtn = u.role === 'admin' ? '' : 
-            (isBaja ? '' : `<button class="btn-delete" onclick="deleteUser('${u.id}')" title="Dar de baja"><i class="ph ph-trash"></i></button>`);
+        const deleteBtn = u.role === 'admin' ? '' :
+            `<button class="btn-delete" onclick="deleteUser('${u.id}')" title="Dar de baja"><i class="ph ph-trash"></i></button>`;
 
         tr.innerHTML = `
             <td>#${u.id.slice(-5)}</td>
@@ -390,25 +435,42 @@ function refreshAdminTable() {
     });
 }
 
-function deleteUser(id) {
-    if (confirm('¿Estás seguro de que deseas dar de baja a este socio?')) {
-        let users = getUsers();
-        const userIndex = users.findIndex(u => u.id === id);
-        if (userIndex > -1) {
-            users[userIndex].status = 'baja'; // Soft delete
-            saveUsers(users);
-            refreshAdminTable();
+async function deleteUser(id) {
+    if (!confirm('¿Estás seguro de que deseas dar de baja a este socio?')) return;
+    if (window.supabaseClient) {
+        try {
+            const { error } = await window.supabaseClient.from('users').update({ status: 'baja' }).eq('id', id);
+            if (error) throw error;
+        } catch (e) {
+            console.error('Error giving user baja', e);
+            alert('Error al actualizar el estado del socio: ' + (e.message || ''));
+            return;
         }
+    } else {
+        let users = getUsers();
+        const idx = users.findIndex(u => u.id === id);
+        if (idx > -1) { users[idx].status = 'baja'; saveUsers(users); }
     }
+    refreshAdminTable();
 }
 
-function resetDB() {
-    if (confirm('⚠️ PELIGRO: Esto borrará todos los socios registrados y restaurará la base de datos a cero. ¿Deseas continuar?')) {
+async function resetDB() {
+    if (!confirm('⚠️ PELIGRO: Esto borrará todos los socios (excepto el Admin) y restaurará la base de datos a cero. ¿Deseas continuar?')) return;
+    if (window.supabaseClient) {
+        try {
+            const { error } = await window.supabaseClient.from('users').delete().neq('role', 'admin');
+            if (error) throw error;
+            alert('Base de datos reseteada correctamente.');
+        } catch (e) {
+            console.error('Error resetting DB', e);
+            alert('Error al resetear: ' + (e.message || ''));
+            return;
+        }
+    } else {
         localStorage.removeItem('club_users');
         localStorage.removeItem('club_current_user');
-        alert('Base de datos reseteada correctamente.');
-        window.location.reload();
     }
+    window.location.reload();
 }
 
 // =========================================
