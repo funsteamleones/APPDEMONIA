@@ -1337,18 +1337,20 @@ async function loadActivities() {
         try {
             const { data, error } = await supabaseClient.from('activities').select('*').order('id', { ascending: true });
             if (error) throw error;
-            activities = data;
+            activities = data || [];
         } catch (e) {
             console.error('Error loading activities from Supabase', e);
             activities = dbGet('club_activities');
+            if (!activities || activities.length === 0) {
+                activities = defaultActivities;
+            }
         }
     } else {
         activities = dbGet('club_activities');
-    }
-    
-    if (!activities || activities.length === 0) {
-        activities = defaultActivities;
-        dbSet('club_activities', activities);
+        if (!activities || activities.length === 0) {
+            activities = defaultActivities;
+            dbSet('club_activities', activities);
+        }
     }
     
     window.currentActivities = activities;
