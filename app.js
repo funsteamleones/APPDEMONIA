@@ -76,13 +76,6 @@ function register() {
         return;
     }
 
-    // Validate reCAPTCHA
-    const recaptchaResponse = typeof grecaptcha !== 'undefined' ? grecaptcha.getResponse() : '';
-    if (!recaptchaResponse) {
-        errorEl.innerText = 'Por favor completá el captcha.';
-        return;
-    }
-
     const users = getUsers();
     
     // Verificar si ya existe
@@ -105,11 +98,10 @@ function register() {
 
     successEl.innerText = '¡Registro exitoso! Ya puedes iniciar sesión.';
     
-    // Limpiar campos
+    // Clear inputs
     document.getElementById('reg-name').value = '';
     document.getElementById('reg-dni').value = '';
     document.getElementById('reg-password').value = '';
-    if (typeof grecaptcha !== 'undefined') grecaptcha.reset();
 
     // Cambiar al form de login tras un breve delay
     setTimeout(() => {
@@ -801,7 +793,7 @@ function closeArticleModal(event) {
 const FAQ_KB = [
     { keywords:['hola','buenas','buenos','saludos','hey','q onda'], answer:'👋 ¡Hola! Soy el asistente virtual del Club Sarmiento. Estoy aquí para guiarte en todo lo que necesites saber sobre la app y el club. ¿En qué te puedo ayudar?' },
     { keywords:['como funciona','que hago','para que sirve','como usar','tutorial','ayuda'], answer:'📚 <b>¿Cómo usar la App?</b><br>Desde el menú lateral (o en la parte inferior si estás en tu celular) podés acceder a todas las funciones:<br>- <b>Inicio:</b> Muestra tu Carnet Digital.<br>- <b>Horarios:</b> Para ver la grilla e inscribirte en clases.<br>- <b>Cuotas:</b> Para ver tu estado de cuenta.<br>- <b>Mi Perfil:</b> Para cargar tus datos y elegir tu foto.' },
-    { keywords:['registrar','registro','cuenta','hacerse socio','nuevo socio','como me registro','crear cuenta'], answer:'👤 <b>¿Cómo registrarse?</b><br>1. En la pantalla inicial (antes de entrar), hacé clic en "Crear cuenta".<br>2. Ingresá tu Nombre, DNI y crea una contraseña.<br>3. Resolvé el captcha (no soy un robot) y listo. Ya serás parte del club.' },
+    { keywords:['registrar','registro','cuenta','hacerse socio','nuevo socio','como me registro','crear cuenta'], answer:'👤 <b>¿Cómo registrarse?</b><br>1. En la pantalla inicial (antes de entrar), hacé clic en "Crear cuenta".<br>2. Ingresá tu Nombre, DNI y crea una contraseña.<br>3. Listo, ya serás parte del club.' },
     { keywords:['iniciar sesion','login','entrar','ingresar'], answer:'🔑 <b>Inicio de sesión:</b><br>En la pantalla de bienvenida, ingresá tu número de DNI y la contraseña que creaste al registrarte. Si olvidaste tu clave, deberás acercarte a secretaría.' },
     { keywords:['perfil','mis datos','foto','avatar','cambiar foto','editar datos','modificar'], answer:'🖼️ <b>Mi Perfil:</b><br>Entrá a "Mi Perfil" desde el menú. Allí podrás cargar tu fecha de nacimiento, teléfono, email, dirección y un contacto de emergencia. También podés elegir tu Avatar (foto de perfil) haciendo clic en los íconos de colores. ¡Recordá presionar "Guardar Datos" al terminar!' },
     { keywords:['cuota','pagar','pago','deuda','debe','factura','mensualidad','precio','costo','valor','cuanto cuesta','cuanto vale'], answer:'💰 <b>Cuotas y Pagos:</b><br>La cuota mensual actual es de $15.000. Podés consultar tu estado de cuenta y si tenés deuda en la pestaña "Cuotas". Las cuotas vencen el último día de cada mes. Podés pagar vía transferencia o MercadoPago. (Para descuentos familiares consultá en secretaría).' },
