@@ -178,15 +178,15 @@ function logout() {
 function checkAuthAndRender() {
     let currentUser = getCurrentUser();
     
-    // Refresh user data from DB to ensure we have latest status
-    if (currentUser) {
+    // Si hay Supabase, el usuario ya fue verificado al hacer login.
+    // Solo re-verificamos desde localStorage si NO usamos Supabase.
+    if (currentUser && !window.supabaseClient) {
         const users = getUsers();
         const freshUser = users.find(u => u.id === currentUser.id);
         if (freshUser) {
             currentUser = freshUser;
             localStorage.setItem('club_current_user', JSON.stringify(currentUser));
         } else {
-            // User was hard deleted
             logout();
             return;
         }
