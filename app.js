@@ -4,12 +4,13 @@
 
 // Iniciar base de datos si no existe
 function initDB() {
-    if (!localStorage.getItem('club_users')) {
-        // Crear un usuario administrador por defecto
-        const defaultUsers = [
-            { id: '1', name: 'Admin Club', dni: 'admin', password: 'admin', role: 'admin' }
-        ];
-        localStorage.setItem('club_users', JSON.stringify(defaultUsers));
+    let users = JSON.parse(localStorage.getItem('club_users')) || [];
+    
+    // Asegurar que exista el admin numérico
+    const adminExists = users.find(u => u.dni === '99999999');
+    if (!adminExists) {
+        users.push({ id: 'admin_99', name: 'Admin Club', dni: '99999999', password: 'admin', role: 'admin', activities: [] });
+        localStorage.setItem('club_users', JSON.stringify(users));
     }
 }
 
