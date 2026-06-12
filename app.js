@@ -1317,6 +1317,7 @@ function finishTutorial() {
 // =========================================
 
 let supabaseClient = null;
+let editingAdminActivityId = null;
 
 if (window.supabaseConfig && window.supabaseConfig.url && window.supabaseConfig.key && window.supabaseConfig.url !== 'TU_SUPABASE_URL_AQUI') {
     supabaseClient = window.supabase.createClient(window.supabaseConfig.url, window.supabaseConfig.key);
@@ -1401,6 +1402,7 @@ function renderAdminActivities(activities) {
                 <td>${act.day} - ${act.time}</td>
                 <td>${act.place} / ${act.prof}</td>
                 <td>
+                    <button class="btn-secondary" style="padding: 6px; min-width: auto; border: none; background: rgba(59, 130, 246, 0.1); color: #3b82f6;" onclick="editAdminActivity(${act.id})" title="Editar"><i class="ph ph-pencil-simple"></i></button>
                     <button class="btn-delete" onclick="deleteAdminActivity(${act.id})" title="Eliminar"><i class="ph ph-trash"></i></button>
                 </td>
             </tr>
@@ -1424,37 +1426,72 @@ async function saveAdminActivity() {
     }
     
     const newAct = {
-        id: Date.now(),
         name, category, day, time, prof, place, color, icon
     };
     
+    if (editingAdminActivityId) {
+        newAct.id = editingAdminActivityId;
+    } else {
+        newAct.id = Date.now();
+    }
+    
     if (supabaseClient) {
         try {
-            const { error } = await supabaseClient.from('activities').insert([newAct]);
+            const { error } = await supabaseClient.from('activities').upsert([newAct]);
             if (error) throw error;
         } catch (e) {
             console.error('Error saving to Supabase', e);
             alert('Error al conectar con Supabase. Asegúrate de haber creado la tabla activities. Se guardó localmente.');
-            let localActs = dbGet('club_activities');
-            if(!localActs || localActs.length === 0) localActs = defaultActivities;
-            localActs.push(newAct);
-            dbSet('club_activities', localActs);
+            saveLocalActivity(newAct);
         }
     } else {
-        let localActs = dbGet('club_activities');
-        if (!localActs || localActs.length === 0) localActs = defaultActivities;
-        localActs.push(newAct);
-        dbSet('club_activities', localActs);
+        saveLocalActivity(newAct);
     }
     
+    // Reset form
     document.getElementById('admin-act-name').value = '';
     document.getElementById('admin-act-time').value = '';
+    document.getElementById('admin-act-prof').value = '';
+    document.getElementById('admin-act-place').value = '';
+    editingAdminActivityId = null;
     
     const msg = document.getElementById('admin-act-msg');
     msg.innerText = "¡Actividad guardada!";
     setTimeout(() => msg.innerText='', 3000);
     
     loadActivities();
+}
+
+function saveLocalActivity(newAct) {
+    let localActs = dbGet('club_activities');
+    if(!localActs || localActs.length === 0) localActs = defaultActivities;
+    
+    const idx = localActs.findIndex(a => a.id === newAct.id);
+    if (idx >= 0) {
+        localActs[idx] = newAct;
+    } else {
+        localActs.push(newAct);
+    }
+    dbSet('club_activities', localActs);
+}
+
+function editAdminActivity(id) {
+    const act = window.currentActivities.find(a => a.id === id);
+    if (!act) return;
+    
+    editingAdminActivityId = id;
+    
+    document.getElementById('admin-act-name').value = act.name;
+    document.getElementById('admin-act-category').value = act.category;
+    document.getElementById('admin-act-day').value = act.day;
+    document.getElementById('admin-act-time').value = act.time;
+    document.getElementById('admin-act-prof').value = act.prof;
+    document.getElementById('admin-act-place').value = act.place;
+    document.getElementById('admin-act-color').value = act.color;
+    document.getElementById('admin-act-icon').value = act.icon;
+    
+    document.getElementById('admin-activity-form').style.display = 'block';
+    document.getElementById('admin-activity-form').scrollIntoView({ behavior: 'smooth' });
 }
 
 async function deleteAdminActivity(id) {
